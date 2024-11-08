@@ -5,4 +5,33 @@
 {% block content %}
     <h1>Welcome to our Recipe Website</h1>
     <p>Discover amazing recipes and share your own!</p>
-{% endblock %} 
+
+    <section class="latest-recipes">
+        <h2>Latest Recipes</h2>
+        <div class="recipe-grid">
+            {% for recipe in latest_recipes %}
+                <div class="recipe-card">
+                    {% if recipe.image %}
+                        <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+                    {% endif %}
+                    <h3>{{ recipe.title }}</h3>
+                    <p>{{ recipe.description|truncatewords:20 }}</p>
+                    <div class="recipe-details">
+                        <p>Cooking time: {{ recipe.cooking_time }} minutes</p>
+                        <p>Servings: {{ recipe.servings }}</p>
+                    </div>
+                    <div class="ingredients-list">
+                        <h4>Ingredients:</h4>
+                        <ul>
+                            {% for ingredient, details in recipe.ingredients.items %}
+                                <li>{{ details.quantity }} {{ details.unit }} {{ ingredient }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% empty %}
+                <p>No recipes available yet.</p>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}
