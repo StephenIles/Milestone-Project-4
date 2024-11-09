@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
-from .forms import UserRegistrationForm, RecipeForm
-from .models import Recipe
+from .forms import UserRegistrationForm, RecipeForm, RatingForm, CommentForm
+from .models import Recipe, Rating, Comment
 
 def home(request):
     latest_recipes = Recipe.objects.all()  # Get all recipes for now
@@ -38,7 +38,44 @@ def recipe_list(request):
 
 def recipe_detail(request, pk):
     recipe = get_object_or_404(Recipe, pk=pk)
-    return render(request, 'recipes/recipe_detail.html', {'recipe': recipe})
+    user_rating = None
+    rating_form = None
+    comment_form = None
+    
+    if request.user.is_authenticated:
+        user_rating = Rating.objects.filter(recipe=recipe, user=request.user).first()
+        rating_form = RatingForm(instance=user_rating)
+        comment_form = CommentForm()
+
+    if request.method == 'POST' and request.user.is_authenticated:
+        if 'rating' in request.POST:
+            rating_form = RatingForm(request.POST, instance=user_rating)
+            if rating_form.is_valid():
+                rating = rating_form.save(commit=False)
+                rating.recipe = recipe
+                rating.user = request.user
+                rating.save()
+                messages.success(request, 'Rating submitted successfully!')
+                return redirect('recipes:recipe_detail', pk=pk)
+                
+        elif 'comment' in request.POST:
+            comment_form = CommentForm(request.POST)
+            if comment_form.is_valid():
+                comment = comment_form.save(commit=False)
+                comment.recipe = recipe
+                comment.user = request.user
+                comment.save()
+                messages.success(request, 'Comment added successfully!')
+                return redirect('recipes:recipe_detail', pk=pk)
+
+    context = {
+        'recipe': recipe,
+        'user_rating': user_rating,
+        'rating_form': rating_form,
+        'comment_form': comment_form,
+        'comments': recipe.comments.all()
+    }
+    return render(request, 'recipes/recipe_detail.html', context)
 
 def register(request):
     if request.method == 'POST':
