@@ -22,7 +22,7 @@ from recipes import views as recipe_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('recipes.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
     path('register/', recipe_views.register, name='register'),
+    path('', include('recipes.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

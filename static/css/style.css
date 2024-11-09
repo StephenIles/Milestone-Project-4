@@ -111,7 +111,6 @@ h1, h2 {
 }
 
 /* Auth Styles */
-/* Add to your existing CSS file */
 .auth-container {
     max-width: 400px;
     margin: 2rem auto;
@@ -144,4 +143,63 @@ h1, h2 {
 
 .auth-form button:hover {
     background: #0056b3;
+}
+
+.form-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.recipe-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.recipe-form input,
+.recipe-form textarea {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.recipe-detail {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.recipe-actions {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    color: white;
+    background: #007bff;
+}
+
+.btn-danger {
+    background: #dc3545;
+}
+
+.delete-confirmation {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
 }
