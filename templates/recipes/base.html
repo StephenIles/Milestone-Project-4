@@ -12,7 +12,7 @@
         <nav>
             <ul>
                 <li><a href="{% url 'recipes:home' %}">Home</a></li>
-                <li><a href="{% url 'recipes:recipes' %}">Recipes</a></li>
+                <li><a href="{% url 'recipes:recipes' %}">Browse Recipes</a></li>
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'recipes:profile' %}">My Profile</a></li>
                     <li><a href="{% url 'logout' %}">Logout</a></li>

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Q
 from .forms import UserRegistrationForm, RecipeForm
 from .models import Recipe
 
@@ -10,7 +11,30 @@ def home(request):
 
 def recipe_list(request):
     recipes = Recipe.objects.all()
-    return render(request, 'recipes/recipe_list.html', {'recipes': recipes})
+    query = request.GET.get('q')
+    cooking_time = request.GET.get('cooking_time')
+    servings = request.GET.get('servings')
+
+    if query:
+        recipes = recipes.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query) |
+            Q(ingredients__icontains=query)
+        )
+
+    if cooking_time:
+        recipes = recipes.filter(cooking_time__lte=cooking_time)
+
+    if servings:
+        recipes = recipes.filter(servings=servings)
+
+    context = {
+        'recipes': recipes,
+        'query': query,
+        'cooking_time': cooking_time,
+        'servings': servings,
+    }
+    return render(request, 'recipes/recipe_list.html', context)
 
 def recipe_detail(request, pk):
     recipe = get_object_or_404(Recipe, pk=pk)
