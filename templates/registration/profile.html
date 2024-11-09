@@ -1,0 +1,25 @@
+{% extends 'recipes/base.html' %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <h2>Welcome, {{ user.username }}!</h2>
+    
+    <section class="my-recipes">
+        <h3>My Recipes</h3>
+        {% if recipes %}
+            <div class="recipe-grid">
+                {% for recipe in recipes %}
+                    <div class="recipe-card">
+                        <h4>{{ recipe.title }}</h4>
+                        <p>{{ recipe.description }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>You haven't created any recipes yet.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %} 

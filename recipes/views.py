@@ -1,4 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .forms import UserRegistrationForm
 from .models import Recipe
 
 def home(request):
@@ -24,3 +27,19 @@ def recipe_detail(request, recipe_id):
         'recipe': recipe,
         'ingredients_list': ingredients_list
     })
+
+def register(request):
+    if request.method == 'POST':
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Registration successful. Please login.')
+            return redirect('login')
+    else:
+        form = UserRegistrationForm()
+    return render(request, 'registration/register.html', {'form': form})
+
+@login_required
+def profile(request):
+    user_recipes = Recipe.objects.filter(author=request.user)
+    return render(request, 'recipes/profile.html', {'recipes': user_recipes})
