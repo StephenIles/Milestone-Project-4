@@ -1,0 +1,172 @@
+{
+    "recipes": [
+        {
+            "title": "Classic Chocolate Cake",
+            "description": "A rich, moist chocolate cake perfect for any celebration",
+            "ingredients": {
+                "flour": {"quantity": 210, "unit": "g"},
+                "sugar": {"quantity": 200, "unit": "g"},
+                "cocoa powder": {"quantity": 75, "unit": "g"},
+                "baking powder": {"quantity": 2, "unit": "tsp"},
+                "eggs": {"quantity": 2, "unit": "piece"},
+                "milk": {"quantity": 240, "unit": "ml"},
+                "vegetable oil": {"quantity": 120, "unit": "ml"},
+                "vanilla extract": {"quantity": 2, "unit": "tsp"}
+            },
+            "instructions": "1. Preheat oven to 180°C\n2. Mix dry ingredients\n3. Add wet ingredients\n4. Bake for 30-35 minutes",
+            "cooking_time": 35,
+            "servings": 8
+        },
+        {
+            "title": "Spaghetti Carbonara",
+            "description": "Traditional Italian pasta dish with eggs, cheese, and pancetta",
+            "ingredients": {
+                "spaghetti": {"quantity": 400, "unit": "g"},
+                "pancetta": {"quantity": 150, "unit": "g"},
+                "parmesan cheese": {"quantity": 100, "unit": "g"},
+                "eggs": {"quantity": 3, "unit": "piece"},
+                "black pepper": {"quantity": 2, "unit": "tsp"},
+                "salt": {"quantity": 1, "unit": "tsp"}
+            },
+            "instructions": "1. Cook pasta\n2. Fry pancetta\n3. Mix eggs and cheese\n4. Combine all ingredients",
+            "cooking_time": 20,
+            "servings": 4
+        },
+        {
+            "title": "Classic Caesar Salad",
+            "description": "Crisp romaine lettuce with traditional Caesar dressing",
+            "ingredients": {
+                "romaine lettuce": {"quantity": 1, "unit": "piece"},
+                "parmesan cheese": {"quantity": 50, "unit": "g"},
+                "croutons": {"quantity": 100, "unit": "g"},
+                "olive oil": {"quantity": 60, "unit": "ml"},
+                "lemon juice": {"quantity": 30, "unit": "ml"},
+                "garlic": {"quantity": 2, "unit": "piece"},
+                "dijon mustard": {"quantity": 1, "unit": "tsp"},
+                "worcestershire sauce": {"quantity": 1, "unit": "tsp"}
+            },
+            "instructions": "1. Wash and chop lettuce\n2. Make dressing\n3. Combine ingredients\n4. Top with cheese and croutons",
+            "cooking_time": 15,
+            "servings": 4
+        },
+        {
+            "title": "Homemade Pizza",
+            "description": "Classic Margherita pizza with fresh basil",
+            "ingredients": {
+                "flour": {"quantity": 500, "unit": "g"},
+                "yeast": {"quantity": 7, "unit": "g"},
+                "salt": {"quantity": 10, "unit": "g"},
+                "olive oil": {"quantity": 30, "unit": "ml"},
+                "tomato sauce": {"quantity": 200, "unit": "ml"},
+                "mozzarella": {"quantity": 250, "unit": "g"},
+                "fresh basil": {"quantity": 10, "unit": "piece"},
+                "warm water": {"quantity": 300, "unit": "ml"}
+            },
+            "instructions": "1. Make dough\n2. Let rise\n3. Top with ingredients\n4. Bake at high temperature",
+            "cooking_time": 90,
+            "servings": 4
+        },
+        {
+            "title": "Chicken Curry",
+            "description": "Aromatic Indian-style curry with tender chicken",
+            "ingredients": {
+                "chicken": {"quantity": 750, "unit": "g"},
+                "onions": {"quantity": 2, "unit": "piece"},
+                "garlic": {"quantity": 4, "unit": "piece"},
+                "ginger": {"quantity": 30, "unit": "g"},
+                "curry powder": {"quantity": 3, "unit": "tbsp"},
+                "coconut milk": {"quantity": 400, "unit": "ml"},
+                "tomatoes": {"quantity": 400, "unit": "g"},
+                "vegetable oil": {"quantity": 30, "unit": "ml"}
+            },
+            "instructions": "1. Cook onions and spices\n2. Add chicken\n3. Simmer with coconut milk\n4. Serve with rice",
+            "cooking_time": 45,
+            "servings": 6
+        },
+        {
+            "title": "Banana Bread",
+            "description": "Moist and delicious classic banana bread",
+            "ingredients": {
+                "ripe bananas": {"quantity": 3, "unit": "piece"},
+                "flour": {"quantity": 250, "unit": "g"},
+                "butter": {"quantity": 115, "unit": "g"},
+                "sugar": {"quantity": 150, "unit": "g"},
+                "eggs": {"quantity": 2, "unit": "piece"},
+                "baking soda": {"quantity": 1, "unit": "tsp"},
+                "salt": {"quantity": 0.5, "unit": "tsp"},
+                "vanilla extract": {"quantity": 1, "unit": "tsp"}
+            },
+            "instructions": "1. Mash bananas\n2. Mix ingredients\n3. Pour into loaf pan\n4. Bake until done",
+            "cooking_time": 60,
+            "servings": 10
+        },
+        {
+            "title": "Greek Salad",
+            "description": "Fresh and crisp traditional Greek salad",
+            "ingredients": {
+                "cucumber": {"quantity": 1, "unit": "piece"},
+                "tomatoes": {"quantity": 4, "unit": "piece"},
+                "red onion": {"quantity": 1, "unit": "piece"},
+                "feta cheese": {"quantity": 200, "unit": "g"},
+                "olives": {"quantity": 100, "unit": "g"},
+                "olive oil": {"quantity": 60, "unit": "ml"},
+                "oregano": {"quantity": 1, "unit": "tbsp"},
+                "salt": {"quantity": 1, "unit": "tsp"}
+            },
+            "instructions": "1. Chop vegetables\n2. Combine ingredients\n3. Add dressing\n4. Top with feta",
+            "cooking_time": 15,
+            "servings": 4
+        },
+        {
+            "title": "Beef Stir Fry",
+            "description": "Quick and tasty Asian-style beef stir fry",
+            "ingredients": {
+                "beef strips": {"quantity": 500, "unit": "g"},
+                "broccoli": {"quantity": 300, "unit": "g"},
+                "carrots": {"quantity": 2, "unit": "piece"},
+                "soy sauce": {"quantity": 60, "unit": "ml"},
+                "garlic": {"quantity": 3, "unit": "piece"},
+                "ginger": {"quantity": 20, "unit": "g"},
+                "vegetable oil": {"quantity": 30, "unit": "ml"},
+                "cornstarch": {"quantity": 1, "unit": "tbsp"}
+            },
+            "instructions": "1. Prepare sauce\n2. Stir-fry beef\n3. Cook vegetables\n4. Combine all ingredients",
+            "cooking_time": 25,
+            "servings": 4
+        },
+        {
+            "title": "Apple Pie",
+            "description": "Classic American apple pie with flaky crust",
+            "ingredients": {
+                "flour": {"quantity": 300, "unit": "g"},
+                "butter": {"quantity": 225, "unit": "g"},
+                "apples": {"quantity": 1000, "unit": "g"},
+                "sugar": {"quantity": 150, "unit": "g"},
+                "cinnamon": {"quantity": 2, "unit": "tsp"},
+                "nutmeg": {"quantity": 0.5, "unit": "tsp"},
+                "salt": {"quantity": 0.5, "unit": "tsp"},
+                "lemon juice": {"quantity": 1, "unit": "tbsp"}
+            },
+            "instructions": "1. Make pie crust\n2. Prepare filling\n3. Assemble pie\n4. Bake until golden",
+            "cooking_time": 75,
+            "servings": 8
+        },
+        {
+            "title": "Vegetable Soup",
+            "description": "Hearty and healthy vegetable soup",
+            "ingredients": {
+                "carrots": {"quantity": 3, "unit": "piece"},
+                "celery": {"quantity": 3, "unit": "piece"},
+                "onion": {"quantity": 1, "unit": "piece"},
+                "potatoes": {"quantity": 2, "unit": "piece"},
+                "vegetable stock": {"quantity": 1500, "unit": "ml"},
+                "tomatoes": {"quantity": 400, "unit": "g"},
+                "green beans": {"quantity": 200, "unit": "g"},
+                "peas": {"quantity": 150, "unit": "g"}
+            },
+            "instructions": "1. Chop vegetables\n2. Sauté vegetables\n3. Add stock and simmer\n4. Season to taste",
+            "cooking_time": 40,
+            "servings": 6
+        }
+    ]
+} 

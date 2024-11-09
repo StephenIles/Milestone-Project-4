@@ -41,4 +41,71 @@ footer {
     position: fixed;
     bottom: 0;
     width: 100%;
-} 
+}
+
+/* Recipe Grid Layout */
+.recipe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    padding: 20px;
+}
+
+.recipe-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.recipe-card h3 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+}
+
+.description {
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.recipe-details {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.ingredients {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+.ingredients h4 {
+    color: #444;
+    margin-bottom: 10px;
+}
+
+.ingredients ul {
+    list-style: none;
+    padding: 0;
+}
+
+.ingredients li {
+    padding: 3px 0;
+    color: #666;
+}
+
+/* General Styles */
+h1, h2 {
+    text-align: center;
+    color: #333;
+    margin: 20px 0;
+}
+
+.recipes-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
