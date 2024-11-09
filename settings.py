@@ -75,5 +75,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'recipes:home'
 LOGOUT_REDIRECT_URL = 'recipes:home'
