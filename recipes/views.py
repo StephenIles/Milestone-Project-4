@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
+from django.contrib.auth import logout
 from .forms import UserRegistrationForm, RecipeForm, RatingForm, CommentForm
 from .models import Recipe, Rating, Comment
 
@@ -82,7 +83,8 @@ def register(request):
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Registration successful. Please login.')
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Account created for {username}! You can now log in.')
             return redirect('login')
     else:
         form = UserRegistrationForm()
@@ -128,3 +130,8 @@ def recipe_delete(request, pk):
         messages.success(request, 'Recipe deleted successfully!')
         return redirect('recipes:profile')
     return render(request, 'recipes/recipe_confirm_delete.html', {'recipe': recipe})
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'You have been successfully logged out.')
+    return redirect('recipes:home')

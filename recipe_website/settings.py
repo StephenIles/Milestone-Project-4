@@ -56,7 +56,7 @@ ROOT_URLCONF = 'recipe_website.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -129,3 +129,19 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Add these settings for password reset emails
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Or your email provider
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email@gmail.com'  # Add your email
+EMAIL_HOST_PASSWORD = 'your-app-password'  # Add your app password
+
+# Password reset timeout (in seconds)
+PASSWORD_RESET_TIMEOUT = 3600  # 1 hour
+
+# Add these settings
+LOGOUT_REDIRECT_URL = 'recipes:home'  # Where to redirect after logout
+LOGIN_REDIRECT_URL = 'recipes:home'   # Where to redirect after login
+LOGIN_URL = 'login'                  # The login page URL

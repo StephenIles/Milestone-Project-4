@@ -126,14 +126,25 @@ h1, h2 {
     gap: 1rem;
 }
 
+.auth-form p {
+    margin: 0;
+}
+
+.auth-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
 .auth-form input {
+    width: 100%;
     padding: 0.5rem;
     border: 1px solid #ddd;
     border-radius: 4px;
 }
 
 .auth-form button {
-    padding: 0.5rem 1rem;
+    padding: 0.75rem;
     background: #007bff;
     color: white;
     border: none;
@@ -143,6 +154,27 @@ h1, h2 {
 
 .auth-form button:hover {
     background: #0056b3;
+}
+
+.auth-links {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.auth-links a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.auth-links a:hover {
+    text-decoration: underline;
+}
+
+.errorlist {
+    color: #dc3545;
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0;
 }
 
 .form-container {

@@ -5,11 +5,16 @@
 {% block content %}
 <div class="auth-container">
     <h2>Login</h2>
+    
     <form method="post" class="auth-form">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Login</button>
     </form>
-    <p>Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
+    
+    <div class="auth-links">
+        <p><a href="{% url 'password_reset' %}">Forgot your password?</a></p>
+        <p>Don't have an account? <a href="{% url 'recipes:register' %}">Register here</a></p>
+    </div>
 </div>
-{% endblock %}
+{% endblock %} 
