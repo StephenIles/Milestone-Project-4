@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'recipes.apps.RecipesConfig',
 ]
 
@@ -130,18 +131,24 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Add these settings for password reset emails
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # Or your email provider
+# Email settings for password reset
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Use your email provider
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'your-email@gmail.com'  # Add your email
 EMAIL_HOST_PASSWORD = 'your-app-password'  # Add your app password
 
+# For development, you can use console backend instead:
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 # Password reset timeout (in seconds)
 PASSWORD_RESET_TIMEOUT = 3600  # 1 hour
 
-# Add these settings
 LOGOUT_REDIRECT_URL = 'recipes:home'  # Where to redirect after logout
 LOGIN_REDIRECT_URL = 'recipes:home'   # Where to redirect after login
 LOGIN_URL = 'login'                  # The login page URL
+
+SITE_ID = 1
+DEFAULT_FROM_EMAIL = 'noreply@recipewebsite.com'
+DOMAIN = 'localhost:8000'
