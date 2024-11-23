@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.contrib.auth import logout
 from .forms import UserRegistrationForm, RecipeForm, RatingForm, CommentForm
-from .models import Recipe, Rating, Comment
+from .models import Recipe, Rating, Comment, Category
 
 def home(request):
     latest_recipes = Recipe.objects.all()  # Get all recipes for now
@@ -135,3 +135,19 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'You have been successfully logged out.')
     return redirect('recipes:home')
+
+def category_list(request):
+    categories = Category.objects.annotate(
+        recipe_count=Count('recipes')
+    )
+    return render(request, 'recipes/category_list.html', {
+        'categories': categories
+    })
+
+def category_detail(request, slug):
+    category = get_object_or_404(Category, slug=slug)
+    recipes = category.recipes.all()
+    return render(request, 'recipes/category_detail.html', {
+        'category': category,
+        'recipes': recipes
+    })

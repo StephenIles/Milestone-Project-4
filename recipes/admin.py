@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Recipe
+from .models import Recipe, Category
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
@@ -18,5 +18,15 @@ class RecipeAdmin(admin.ModelAdmin):
         }
         """
         return form
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'recipe_count')
+    prepopulated_fields = {'slug': ('name',)}
+    search_fields = ('name', 'description')
+
+    def recipe_count(self, obj):
+        return obj.recipes.count()
+    recipe_count.short_description = 'Number of Recipes'
 
 # Register your models here.

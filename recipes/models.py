@@ -2,9 +2,28 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils.text import slugify
 import json
 
 # Create your models here.
+
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
 class Recipe(models.Model):
     title = models.CharField(max_length=200)
@@ -19,6 +38,13 @@ class Recipe(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='recipe_images/', null=True, blank=True)
+    category = models.ForeignKey(
+        Category, 
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recipes'
+    )
 
     def clean(self):
         # Validate ingredients format

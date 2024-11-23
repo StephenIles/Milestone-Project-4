@@ -13,4 +13,6 @@ urlpatterns = [
     path('recipe/<int:pk>/delete/', views.recipe_delete, name='recipe_delete'),
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.register, name='register'),
+    path('categories/', views.category_list, name='category_list'),
+    path('category/<slug:slug>/', views.category_detail, name='category_detail'),
 ] 

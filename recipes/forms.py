@@ -13,7 +13,7 @@ class UserRegistrationForm(UserCreationForm):
 class RecipeForm(forms.ModelForm):
     class Meta:
         model = Recipe
-        fields = ['title', 'description', 'ingredients', 'instructions', 'cooking_time', 'servings', 'image']
+        fields = ['title', 'category', 'description', 'ingredients', 'instructions', 'cooking_time', 'servings', 'image']
         widgets = {
             'ingredients': forms.Textarea(attrs={
                 'placeholder': '{"ingredient": {"quantity": number, "unit": "string"}}',

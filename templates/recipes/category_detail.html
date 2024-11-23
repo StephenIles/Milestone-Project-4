@@ -1,0 +1,25 @@
+{% extends 'recipes/base.html' %}
+
+{% block title %}{{ category.name }} Recipes{% endblock %}
+
+{% block content %}
+<div class="category-detail">
+    <h1>{{ category.name }}</h1>
+    <p class="category-description">{{ category.description }}</p>
+    
+    <div class="recipe-grid">
+        {% for recipe in recipes %}
+            <div class="recipe-card">
+                <h3>{{ recipe.title }}</h3>
+                {% if recipe.image %}
+                    <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+                {% endif %}
+                <p>{{ recipe.description|truncatewords:30 }}</p>
+                <a href="{% url 'recipes:recipe_detail' recipe.pk %}" class="btn">View Recipe</a>
+            </div>
+        {% empty %}
+            <p>No recipes in this category yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
