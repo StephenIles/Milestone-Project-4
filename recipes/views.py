@@ -6,7 +6,7 @@ from django.contrib.auth import logout
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .forms import UserRegistrationForm, RecipeForm, RatingForm, CommentForm
-from .models import Recipe, Rating, Comment, Category, Favorite
+from .models import Recipe, Rating, Comment, Category, Favorite, Tag
 
 def home(request):
     latest_recipes = Recipe.objects.all()  # Get all recipes for now
@@ -186,4 +186,18 @@ def favorite_recipes(request):
     favorites = Favorite.objects.filter(user=request.user)
     return render(request, 'recipes/favorite_list.html', {
         'favorites': favorites
+    })
+
+def tag_list(request):
+    tags = Tag.objects.annotate(
+        recipe_count=Count('recipes')
+    ).order_by('-recipe_count')
+    return render(request, 'recipes/tag_list.html', {'tags': tags})
+
+def tag_detail(request, slug):
+    tag = get_object_or_404(Tag, slug=slug)
+    recipes = tag.recipes.all()
+    return render(request, 'recipes/tag_detail.html', {
+        'tag': tag,
+        'recipes': recipes
     })

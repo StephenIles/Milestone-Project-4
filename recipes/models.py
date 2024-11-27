@@ -45,6 +45,7 @@ class Recipe(models.Model):
         blank=True,
         related_name='recipes'
     )
+    tags = models.ManyToManyField('Tag', related_name='recipes', blank=True)
 
     def clean(self):
         # Validate ingredients format
@@ -109,3 +110,23 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.recipe.title}"
+
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(max_length=50, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    @property
+    def recipe_count(self):
+        return self.recipes.count()

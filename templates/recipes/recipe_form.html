@@ -1,14 +1,45 @@
 {% extends 'recipes/base.html' %}
-
-{% block title %}{{ title }}{% endblock %}
+{% load static %}
 
 {% block content %}
 <div class="form-container">
-    <h2>{{ title }}</h2>
-    <form method="post" enctype="multipart/form-data" class="recipe-form">
+    <h1>{% if form.instance.pk %}Edit{% else %}New{% endif %} Recipe</h1>
+    
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Save Recipe</button>
+        
+        <!-- ... other form fields ... -->
+        
+        <div class="form-group">
+            <label for="id_tags">Tags:</label>
+            <input type="text" 
+                   name="tags" 
+                   id="id_tags" 
+                   class="tag-input" 
+                   placeholder="Add tags (comma separated)"
+                   value="{{ recipe.tags.all|join:", " }}"
+            >
+            <small class="form-text text-muted">
+                Enter tags separated by commas (e.g., "dinner, quick, vegetarian")
+            </small>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Save Recipe</button>
     </form>
 </div>
-{% endblock %} 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tagInput = document.querySelector('.tag-input');
+    
+    // Prevent form submission on enter key in tag input
+    tagInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

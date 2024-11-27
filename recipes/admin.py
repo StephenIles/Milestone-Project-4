@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Recipe, Category
+from .models import Recipe, Category, Tag
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
@@ -25,6 +25,16 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ('name', 'description')
 
+    def recipe_count(self, obj):
+        return obj.recipes.count()
+    recipe_count.short_description = 'Number of Recipes'
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'recipe_count', 'created_at')
+    search_fields = ('name',)
+    prepopulated_fields = {'slug': ('name',)}
+    
     def recipe_count(self, obj):
         return obj.recipes.count()
     recipe_count.short_description = 'Number of Recipes'
