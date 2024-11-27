@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
+    {% csrf_token %}
+
     <header>
         <nav>
             <ul>
@@ -17,6 +19,7 @@
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'recipes:profile' %}">My Profile</a></li>
                     <li><a href="{% url 'recipes:logout' %}">Logout</a></li>
+                    <li><a href="{% url 'recipes:favorite_list' %}">My Favorites</a></li>
                 {% else %}
                     <li><a href="{% url 'login' %}">Login</a></li>
                     <li><a href="{% url 'recipes:register' %}">Register</a></li>
@@ -33,7 +36,7 @@
     <footer>
         <p>&copy; 2024 Recipe Website</p>
     </footer>
-
+    <script src="{% static 'js/favorites.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
 </body>
 </html>

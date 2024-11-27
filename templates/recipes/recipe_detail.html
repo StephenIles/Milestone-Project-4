@@ -3,86 +3,115 @@
 {% block title %}{{ recipe.title }}{% endblock %}
 
 {% block content %}
-<div class="recipe-detail">
-    <h2>{{ recipe.title }}</h2>
-    
-    <!-- Recipe Info -->
-    <div class="recipe-info">
-        {% if recipe.image %}
-            <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
-        {% endif %}
+    {% csrf_token %}
+    <div class="recipe-detail">
+        <h2>{{ recipe.title }}</h2>
         
-        <div class="recipe-meta">
-            <p>By {{ recipe.author.username }}</p>
-            <p>Cooking Time: {{ recipe.cooking_time }} minutes</p>
-            <p>Servings: {{ recipe.servings }}</p>
+        <!-- Recipe Info -->
+        <div class="recipe-info">
+            {% if recipe.image %}
+                <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+            {% endif %}
             
-            <!-- Average Rating -->
-            <div class="rating-summary">
-                {% with avg_rating=recipe.ratings.all|length %}
-                    {% if avg_rating > 0 %}
-                        <p>Average Rating: {{ recipe.ratings.all|stringformat:".1f" }} ({{ avg_rating }} ratings)</p>
-                    {% else %}
-                        <p>No ratings yet</p>
-                    {% endif %}
-                {% endwith %}
+            <div class="recipe-meta">
+                <p>By {{ recipe.author.username }}</p>
+                <p>Cooking Time: {{ recipe.cooking_time }} minutes</p>
+                <p>Servings: {{ recipe.servings }}</p>
+                
+                <!-- Average Rating -->
+                <div class="rating-summary">
+                    {% with avg_rating=recipe.ratings.all|length %}
+                        {% if avg_rating > 0 %}
+                            <p>Average Rating: {{ recipe.ratings.all|stringformat:".1f" }} ({{ avg_rating }} ratings)</p>
+                        {% else %}
+                            <p>No ratings yet</p>
+                        {% endif %}
+                    {% endwith %}
+                </div>
             </div>
-        </div>
 
-        <!-- Rating Form -->
-        {% if user.is_authenticated %}
-            <div class="rating-form">
-                <h4>Rate this recipe</h4>
-                <form method="post">
-                    {% csrf_token %}
-                    {{ rating_form.as_p }}
-                    <button type="submit" name="rating">Submit Rating</button>
-                </form>
-            </div>
-        {% endif %}
-
-        <!-- Recipe Content -->
-        <div class="recipe-content">
-            <p class="description">{{ recipe.description }}</p>
-            
-            <h3>Ingredients</h3>
-            <ul class="ingredients-list">
-                {% for ingredient, details in recipe.ingredients.items %}
-                    <li>{{ ingredient }}: {{ details.quantity }} {{ details.unit }}</li>
-                {% endfor %}
-            </ul>
-
-            <h3>Instructions</h3>
-            <div class="instructions">
-                {{ recipe.instructions|linebreaks }}
-            </div>
-        </div>
-
-        <!-- Comments Section -->
-        <div class="comments-section">
-            <h3>Comments</h3>
-            
+            <!-- Favorite Button -->
             {% if user.is_authenticated %}
-                <form method="post" class="comment-form">
-                    {% csrf_token %}
-                    {{ comment_form.as_p }}
-                    <button type="submit" name="comment">Add Comment</button>
-                </form>
+                <button 
+                    class="btn btn-favorite {% if is_favorited %}active{% endif %}" 
+                    data-recipe-id="{{ recipe.id }}"
+                    onclick="toggleFavorite(this)"
+                    type="button">
+                    {% if is_favorited %}
+                        ★ Favorited
+                    {% else %}
+                        ☆ Add to Favorites
+                    {% endif %}
+                </button>
             {% endif %}
 
-            <div class="comments-list">
-                {% for comment in comments %}
-                    <div class="comment">
-                        <p class="comment-meta">
-                            {{ comment.user.username }} - {{ comment.created_at|date:"F j, Y" }}
-                        </p>
-                        <p class="comment-text">{{ comment.text }}</p>
-                    </div>
-                {% empty %}
-                    <p>No comments yet. Be the first to comment!</p>
-                {% endfor %}
+            <!-- Rating Form -->
+            {% if user.is_authenticated %}
+                <div class="rating-form">
+                    <h4>Rate this recipe</h4>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ rating_form.as_p }}
+                        <button type="submit" name="rating">Submit Rating</button>
+                    </form>
+                </div>
+            {% endif %}
+
+            <!-- Recipe Content -->
+            <div class="recipe-content">
+                <p class="description">{{ recipe.description }}</p>
+                
+                <h3>Ingredients</h3>
+                <ul class="ingredients-list">
+                    {% for ingredient, details in recipe.ingredients.items %}
+                        <li>{{ ingredient }}: {{ details.quantity }} {{ details.unit }}</li>
+                    {% endfor %}
+                </ul>
+
+                <h3>Instructions</h3>
+                <div class="instructions">
+                    {{ recipe.instructions|linebreaks }}
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="comments-section">
+                <h3>Comments</h3>
+                
+                {% if user.is_authenticated %}
+                    <form method="post" class="comment-form">
+                        {% csrf_token %}
+                        {{ comment_form.as_p }}
+                        <button type="submit" name="comment">Add Comment</button>
+                    </form>
+                {% endif %}
+
+                <div class="comments-list">
+                    {% for comment in comments %}
+                        <div class="comment">
+                            <p class="comment-meta">
+                                {{ comment.user.username }} - {{ comment.created_at|date:"F j, Y" }}
+                            </p>
+                            <p class="comment-text">{{ comment.text }}</p>
+                        </div>
+                    {% empty %}
+                        <p>No comments yet. Be the first to comment!</p>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
-</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add this to verify the button is properly set up
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Page loaded');
+        const favoriteButton = document.querySelector('.btn-favorite');
+        if (favoriteButton) {
+            console.log('Favorite button found:', favoriteButton.dataset.recipeId);
+        }
+    });
+</script>
 {% endblock %}

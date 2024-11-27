@@ -3,8 +3,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q, Count
 from django.contrib.auth import logout
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from .forms import UserRegistrationForm, RecipeForm, RatingForm, CommentForm
-from .models import Recipe, Rating, Comment, Category
+from .models import Recipe, Rating, Comment, Category, Favorite
 
 def home(request):
     latest_recipes = Recipe.objects.all()  # Get all recipes for now
@@ -42,6 +44,15 @@ def recipe_detail(request, pk):
     user_rating = None
     rating_form = None
     comment_form = None
+    is_favorited = False
+
+    if request.user.is_authenticated:
+        is_favorited = Favorite.objects.filter(
+            user=request.user,
+            recipe=recipe
+        ).exists()
+
+
     
     if request.user.is_authenticated:
         user_rating = Rating.objects.filter(recipe=recipe, user=request.user).first()
@@ -74,7 +85,8 @@ def recipe_detail(request, pk):
         'user_rating': user_rating,
         'rating_form': rating_form,
         'comment_form': comment_form,
-        'comments': recipe.comments.all()
+        'comments': recipe.comments.all(),
+        'is_favorited': is_favorited
     }
     return render(request, 'recipes/recipe_detail.html', context)
 
@@ -150,4 +162,28 @@ def category_detail(request, slug):
     return render(request, 'recipes/category_detail.html', {
         'category': category,
         'recipes': recipes
+    })
+
+@require_POST
+@login_required
+def toggle_favorite(request, recipe_id):
+    try:
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        favorite = Favorite.objects.filter(user=request.user, recipe=recipe).first()
+        
+        if favorite:
+            favorite.delete()
+            return JsonResponse({'status': 'removed'})
+        else:
+            Favorite.objects.create(user=request.user, recipe=recipe)
+            return JsonResponse({'status': 'added'})
+            
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+@login_required
+def favorite_recipes(request):
+    favorites = Favorite.objects.filter(user=request.user)
+    return render(request, 'recipes/favorite_list.html', {
+        'favorites': favorites
     })

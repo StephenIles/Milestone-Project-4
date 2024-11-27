@@ -15,4 +15,8 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('categories/', views.category_list, name='category_list'),
     path('category/<slug:slug>/', views.category_detail, name='category_detail'),
+    
+    # Favorite URLs - Make sure these are at the root level
+    path('recipes/favorite/<int:recipe_id>/toggle/', views.toggle_favorite, name='toggle_favorite'),
+    path('favorites/', views.favorite_recipes, name='favorite_list'),
 ] 

@@ -405,3 +405,32 @@ h1, h2 {
     margin: 20px 0;
     text-align: center;
 }
+
+/* Favorite Button Styles */
+.btn-favorite {
+    background: transparent;
+    border: 2px solid #ffd700;
+    color: #ffd700;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-favorite.active {
+    background: #ffd700;
+    color: white;
+}
+
+.favorite-date {
+    color: #666;
+    font-size: 0.9em;
+    font-style: italic;
+}
+
+/* Recipe Card Action Styles */
+.recipe-card-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+}
