@@ -6,7 +6,7 @@ from django.contrib.auth import logout
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .forms import UserRegistrationForm, RecipeForm, RatingForm, CommentForm, RecipeSearchForm
-from .models import Recipe, Rating, Comment, Category, Favorite, Tag
+from .models import Recipe, Rating, Comment, Category, Favorite, Tag, ShareCount
 
 def home(request):
     latest_recipes = Recipe.objects.all()  # Get all recipes for now
@@ -250,3 +250,15 @@ def recipe_search(request):
     }
     
     return render(request, 'recipes/search.html', context)
+
+def track_share(request, recipe_id, platform):
+    if request.method == 'POST':
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        share_count, _ = ShareCount.objects.get_or_create(
+            recipe=recipe,
+            platform=platform
+        )
+        share_count.count += 1
+        share_count.save()
+        return JsonResponse({'status': 'success', 'count': share_count.count})
+    return JsonResponse({'status': 'error'}, status=400)

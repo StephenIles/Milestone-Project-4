@@ -45,7 +45,6 @@ class Recipe(models.Model):
         blank=True,
         related_name='recipes'
     )
-    tags = models.ManyToManyField('Tag', related_name='recipes', blank=True)
 
     def clean(self):
         # Validate ingredients format
@@ -130,3 +129,11 @@ class Tag(models.Model):
     @property
     def recipe_count(self):
         return self.recipes.count()
+    
+class ShareCount(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='share_counts')
+    platform = models.CharField(max_length=20)
+    count = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        unique_together = ['recipe', 'platform']

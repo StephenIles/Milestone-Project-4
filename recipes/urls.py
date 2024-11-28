@@ -20,4 +20,5 @@ urlpatterns = [
     path('tags/', views.tag_list, name='tag_list'),
     path('tag/<slug:slug>/', views.tag_detail, name='tag_detail'),
     path('search/', views.recipe_search, name='recipe_search'),
+    path('recipe/<int:recipe_id>/share/<str:platform>/', views.track_share, name='track_share'),
 ] 

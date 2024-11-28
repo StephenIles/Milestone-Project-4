@@ -100,7 +100,6 @@
                 </div>
             </div>
 
-            <!-- Add this where you want to display tags -->
             <div class="recipe-tags">
                 <h3>Tags:</h3>
                 {% for tag in recipe.tags.all %}
@@ -110,6 +109,43 @@
                 {% empty %}
                     <p>No tags</p>
                 {% endfor %}
+            </div>
+
+            {% load social_share %}
+
+            <div class="share-buttons">
+                <h3>Share this recipe:</h3>
+                
+                {% social_share_url 'facebook' recipe as facebook_url %}
+                <button class="share-button share-facebook" 
+                        onclick="shareRecipe('facebook', '{{ facebook_url }}')">
+                    <i class="fab fa-facebook-f"></i> Facebook
+                </button>
+                
+                {% social_share_url 'twitter' recipe as twitter_url %}
+                <button class="share-button share-twitter" 
+                        onclick="shareRecipe('twitter', '{{ twitter_url }}')">
+                    <i class="fab fa-twitter"></i> Twitter
+                </button>
+                
+                {% social_share_url 'pinterest' recipe as pinterest_url %}
+                <button class="share-button share-pinterest" 
+                        onclick="shareRecipe('pinterest', '{{ pinterest_url }}')">
+                    <i class="fab fa-pinterest-p"></i> Pinterest
+                </button>
+                
+                {% social_share_url 'email' recipe as email_url %}
+                <button class="share-button share-email" 
+                        onclick="shareRecipe('email', '{{ email_url }}')">
+                    <i class="fas fa-envelope"></i> Email
+                </button>
+                
+                <div class="copy-link-container">
+                    <input type="hidden" id="recipe-url" value="{{ request.build_absolute_uri }}">
+                    <button id="copy-link" class="share-button copy-link" onclick="copyLink()">
+                        <i class="fas fa-link"></i> Copy Link
+                    </button>
+                </div>
             </div>
         </div>
     </div>

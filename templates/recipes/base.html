@@ -6,6 +6,7 @@
     <title>{% block title %}Recipe Website{% endblock %}</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
     {% csrf_token %}
@@ -39,7 +40,7 @@
         <p>&copy; 2024 Recipe Website</p>
     </footer>
     <script src="{% static 'js/favorites.js' %}"></script>
-    <script src="{% static 'js/main.js' %}"></script>
     <script src="{% static 'js/search.js' %}"></script>
+    <script src="{% static 'js/social_share.js' %}"></script>
 </body>
 </html>
