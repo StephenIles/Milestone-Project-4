@@ -157,6 +157,14 @@ A Django-based recipe sharing platform where users can create, share, and discov
      - Generate shopping lists from meal plans
      - Export shopping lists as PDF
 
+6. As a premium user, I want to manage my subscription
+   - **Acceptance Criteria:**
+     - Purchase a subscription
+     - View subscription status
+     - Cancel subscription
+     - Access premium features
+     - Manage payment methods
+
 ### Subscription Management
 1. As a visitor, I want to understand premium benefits
    - **Acceptance Criteria:**
@@ -220,6 +228,12 @@ A Django-based recipe sharing platform where users can create, share, and discov
   - Daily notes for meal plans
   - Shopping list generation
   - PDF export for shopping lists
+- ✅ Subscription Management
+  - Premium subscription purchase
+  - Subscription status viewing
+  - Subscription cancellation
+  - Access control for premium features
+  - Grace period after cancellation
 
 ## Technologies Used
 
@@ -227,6 +241,7 @@ A Django-based recipe sharing platform where users can create, share, and discov
 - Python 3.12
 - Django 5.0
 - SQLite3
+- Stripe (Payment Processing)
 
 ### Frontend
 - HTML5
@@ -255,10 +270,13 @@ A Django-based recipe sharing platform where users can create, share, and discov
    ```
 
 4. Configure environment:
-   Create a `.env` file with:
+   Create a `.env` file using `.env.example` as template with:
    ```
    SECRET_KEY=your_secret_key
    DEBUG=True
+   STRIPE_PUBLIC_KEY=your_stripe_public_key
+   STRIPE_SECRET_KEY=your_stripe_secret_key
+   STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
    ```
 
 5. Setup database:
@@ -335,25 +353,6 @@ class Favorite:
         unique_together = ['recipe', 'user']  # One favorite per user per recipe
 ```
 
-### Relationships
-- A Recipe belongs to one User (author)
-- A Recipe belongs to one Category (optional)
-- A Recipe can have many Tags
-- A Recipe can have many Ratings from different Users
-- A Recipe can have many Comments from different Users
-- A Recipe can be favorited by many Users
-- A User can have many Recipes
-- A User can have many Ratings on different Recipes
-- A User can have many Comments on different Recipes
-- A User can have many Favorite Recipes
-
-### Key Features
-- JSON storage for ingredients allows flexible ingredient management
-- Unique constraint on Rating ensures one rating per user per recipe
-- Automatic timestamps for creation and updates
-- Image upload support with dedicated media storage
-- Built-in user authentication system
-
 ### MealPlan Model
 ```python
 class MealPlan:
@@ -376,6 +375,36 @@ class WeeklyMealPlan:
     daily_plans     : ManyToManyField(MealPlan)
     created_at      : DateTimeField(auto_now_add=True)
     updated_at      : DateTimeField(auto_now=True)
+```
+
+### UserProfile Model
+```python
+class UserProfile:
+    user                    : OneToOneField(User)
+    is_premium             : BooleanField(default=False)
+    stripe_subscription_id : CharField(max_length=100, null=True)
+    subscription_end_date  : DateTimeField(null=True)
+    subscription_cancelled : BooleanField(default=False)
+```
+
+### Relationships
+- A Recipe belongs to one User (author)
+- A Recipe belongs to one Category (optional)
+- A Recipe can have many Tags
+- A Recipe can have many Ratings from different Users
+- A Recipe can have many Comments from different Users
+- A Recipe can be favorited by many Users
+- A User can have many Recipes
+- A User can have many Ratings on different Recipes
+- A User can have many Comments on different Recipes
+- A User can have many Favorite Recipes
+
+### Key Features
+- JSON storage for ingredients allows flexible ingredient management
+- Unique constraint on Rating ensures one rating per user per recipe
+- Automatic timestamps for creation and updates
+- Image upload support with dedicated media storage
+- Built-in user authentication system
 ```
 
 ## Testing
@@ -419,6 +448,10 @@ class WeeklyMealPlan:
 - ✅ Recipe assignment to meals
 - ✅ Shopping list generation
 - ✅ PDF download functionality
+- ✅ Subscription purchase flow
+- ✅ Subscription cancellation
+- ✅ Premium feature access control
+- ✅ Subscription status display
 
 ### Browser Compatibility
 - ✅ Chrome
@@ -463,11 +496,22 @@ class WeeklyMealPlan:
 - Implemented proper validation in the view
 - Added update functionality for existing ratings
 
+### Issue 6: Subscription Management
+**Problem:** Subscription cancellation wasn't maintaining access until period end.
+**Solution:**
+- Added subscription_cancelled field to track status
+- Updated subscription management template
+- Implemented proper cancellation handling
+- Maintained premium access during grace period
+
 ### Known Limitations
 1. Image file size not restricted
 2. No bulk recipe import/export
 3. Limited recipe variation support
 4. No API endpoints currently available
+5. Limited payment method options
+6. No subscription reactivation flow
+7. Manual webhook configuration required
 
 ### Future Improvements
 1. Add image compression
@@ -475,9 +519,51 @@ class WeeklyMealPlan:
 3. Add user following system
 4. Enhance search with elasticsearch
 5. Add recipe version control
+6. Add multiple subscription tiers
+7. Implement subscription reactivation
+8. Add payment method management
+9. Enhance subscription analytics
 
 ## Performance Considerations
 - Database query optimization needed for large recipe sets
 - Image optimization for faster loading
 - Caching implementation required for frequently accessed data
 - Pagination implementation for large lists
+
+## Testing Payments
+
+### Stripe Test Cards
+Use these test card numbers to simulate different payment scenarios:
+
+#### Successful Payments
+- Card Number: 4242 4242 4242 4242
+- Expiry: Any future date (e.g., 12/25)
+- CVC: Any 3 digits (e.g., 123)
+- ZIP: Any 5 digits (e.g., 12345)
+
+#### Payment Requiring Authentication
+- Card Number: 4000 0025 0000 3155
+- Expiry: Any future date
+- CVC: Any 3 digits
+- ZIP: Any 5 digits
+
+#### Payment Declined
+- Card Number: 4000 0000 0000 9995
+- Expiry: Any future date
+- CVC: Any 3 digits
+- ZIP: Any 5 digits
+
+### Test Webhook Events
+To test webhook functionality locally:
+1. Install the Stripe CLI
+2. Run: `stripe listen --forward-to localhost:8000/webhook/`
+3. Use the webhook signing secret provided in the CLI output
+
+### Testing Notes
+- Test payments will not charge real cards
+- Stripe will send test webhook events
+- Test mode is indicated by the test API keys
+- Subscription renewals can be simulated in the Stripe dashboard
+- Test refunds are processed instantly
+
+For more test card numbers and scenarios, visit the [Stripe Testing Documentation](https://stripe.com/docs/testing).
