@@ -5,8 +5,8 @@ from django.db.models import Q, Count, Avg
 from django.contrib.auth import logout
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .forms import UserRegistrationForm, RecipeForm, RatingForm, CommentForm, RecipeSearchForm
-from .models import Recipe, Rating, Comment, Category, Favorite, Tag, ShareCount
+from .forms import UserRegistrationForm, RecipeForm, RatingForm, CommentForm, RecipeSearchForm, CollectionForm
+from .models import Recipe, Rating, Comment, Category, Favorite, Tag, ShareCount, Collection
 
 def home(request):
     latest_recipes = Recipe.objects.all()  # Get all recipes for now
@@ -262,3 +262,133 @@ def track_share(request, recipe_id, platform):
         share_count.save()
         return JsonResponse({'status': 'success', 'count': share_count.count})
     return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+def collection_list(request):
+    collections = Collection.objects.filter(
+        Q(owner=request.user) | Q(is_public=True)
+    ).distinct()
+    
+    can_create = Collection.can_create_collection(request.user)
+    
+    return render(request, 'recipes/collection_list.html', {
+        'collections': collections,
+        'can_create': can_create,
+    })
+
+@login_required
+def collection_detail(request, pk):
+    collection = get_object_or_404(Collection, pk=pk)
+    if not collection.is_public and collection.owner != request.user:
+        raise PermissionDenied
+    
+    can_add = collection.can_add_recipe(request.user)
+    
+    return render(request, 'recipes/collection_detail.html', {
+        'collection': collection,
+        'can_add': can_add,
+    })
+
+@login_required
+def collection_create(request):
+    if not Collection.can_create_collection(request.user):
+        messages.error(request, 'You have reached the maximum number of collections for free accounts.')
+        return redirect('recipes:collection_list')
+    
+    if request.method == 'POST':
+        form = CollectionForm(request.POST)
+        if form.is_valid():
+            collection = form.save(commit=False)
+            collection.owner = request.user
+            collection.save()
+            messages.success(request, 'Collection created successfully!')
+            return redirect('recipes:collection_detail', pk=collection.pk)
+    else:
+        form = CollectionForm()
+    
+    return render(request, 'recipes/collection_form.html', {'form': form})
+
+@login_required
+def collection_edit(request, pk):
+    collection = get_object_or_404(Collection, pk=pk, owner=request.user)
+    
+    if request.method == 'POST':
+        form = CollectionForm(request.POST, instance=collection)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Collection updated successfully!')
+            return redirect('recipes:collection_detail', pk=collection.pk)
+    else:
+        form = CollectionForm(instance=collection)
+    
+    return render(request, 'recipes/collection_form.html', {
+        'form': form,
+        'collection': collection,
+    })
+
+@login_required
+def collection_delete(request, pk):
+    try:
+        collection = get_object_or_404(Collection, pk=pk, owner=request.user)
+        collection.delete()
+        messages.success(request, 'Collection deleted successfully!')
+        return redirect('recipes:collection_list')
+    except Exception as e:
+        messages.error(request, f'Error deleting collection: {str(e)}')
+        return redirect('recipes:collection_detail', pk=pk)
+
+@login_required
+def collection_add_recipe(request, collection_pk, recipe_pk):
+    try:
+        collection = get_object_or_404(Collection, pk=collection_pk, owner=request.user)
+        recipe = get_object_or_404(Recipe, pk=recipe_pk)
+        
+        if not collection.can_add_recipe(request.user):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'You have reached the maximum recipes for this collection. Upgrade to add more!'
+            }, status=400)
+        
+        collection.recipes.add(recipe)
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Recipe added to collection successfully!'
+        })
+    except Exception as e:
+        print(f"Error adding recipe to collection: {str(e)}")  # For debugging
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+
+@login_required
+def collection_remove_recipe(request, collection_pk, recipe_pk):
+    try:
+        collection = get_object_or_404(Collection, pk=collection_pk, owner=request.user)
+        recipe = get_object_or_404(Recipe, pk=recipe_pk)
+        
+        collection.recipes.remove(recipe)
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Recipe removed from collection successfully!'
+        })
+    except Exception as e:
+        print(f"Error removing recipe from collection: {str(e)}")  # For debugging
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+
+@login_required
+def get_user_collections(request):
+    try:
+        collections = Collection.objects.filter(owner=request.user).values('id', 'name')
+        return JsonResponse({
+            'status': 'success',
+            'collections': list(collections)
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)

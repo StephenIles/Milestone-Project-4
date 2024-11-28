@@ -1,0 +1,77 @@
+{% extends 'recipes/base.html' %}
+
+{% block content %}
+<div class="form-container collection-form">
+    <h1>{% if collection %}Edit{% else %}Create New{% endif %} Collection</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.name.id_for_label }}">Collection Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="field-error">
+                    {% for error in form.name.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">Description</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+                <div class="field-error">
+                    {% for error in form.description.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <small class="form-text">Briefly describe what this collection is about</small>
+        </div>
+
+        <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+                {{ form.is_public }}
+                Make this collection public
+            </label>
+            {% if form.is_public.errors %}
+                <div class="field-error">
+                    {% for error in form.is_public.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <small class="form-text">Public collections can be viewed by all users</small>
+        </div>
+
+        {% if not user.is_premium %}
+            <div class="premium-notice">
+                <p>
+                    <i class="fas fa-star"></i>
+                    Free accounts are limited to {{ Collection.MAX_FREE_COLLECTIONS }} collections with 
+                    {{ Collection.MAX_RECIPES_PER_COLLECTION }} recipes each.
+                    <a href="#">Upgrade to Premium</a> for unlimited collections!
+                </p>
+            </div>
+        {% endif %}
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {% if collection %}Save Changes{% else %}Create Collection{% endif %}
+            </button>
+            <a href="{% url 'recipes:collection_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

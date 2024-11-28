@@ -23,6 +23,7 @@
                     <li><a href="{% url 'recipes:profile' %}">My Profile</a></li>
                     <li><a href="{% url 'recipes:logout' %}">Logout</a></li>
                     <li><a href="{% url 'recipes:favorite_list' %}">My Favorites</a></li>
+                    <li><a href="{% url 'recipes:collection_list' %}">My Collections</a></li>
                 {% else %}
                     <li><a href="{% url 'login' %}">Login</a></li>
                     <li><a href="{% url 'recipes:register' %}">Register</a></li>
@@ -42,5 +43,6 @@
     <script src="{% static 'js/favorites.js' %}"></script>
     <script src="{% static 'js/search.js' %}"></script>
     <script src="{% static 'js/social_share.js' %}"></script>
+    <script src="{% static 'js/collections.js' %}"></script>
 </body>
 </html>

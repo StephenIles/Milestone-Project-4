@@ -1,0 +1,34 @@
+{% extends 'recipes/base.html' %}
+
+{% block content %}
+<div class="collections-container">
+    <div class="collections-header">
+        <h1>Recipe Collections</h1>
+        {% if can_create %}
+            <a href="{% url 'recipes:collection_create' %}" class="btn btn-primary">Create Collection</a>
+        {% else %}
+            <div class="upgrade-prompt">
+                <p>Want to create more collections? <a href="#">Upgrade to Premium</a></p>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="collections-grid">
+        {% for collection in collections %}
+            <div class="collection-card">
+                <h3>{{ collection.name }}</h3>
+                <p>{{ collection.description|truncatewords:30 }}</p>
+                <div class="collection-meta">
+                    <span>{{ collection.recipe_count }} recipes</span>
+                    {% if collection.is_public %}
+                        <span class="public-badge">Public</span>
+                    {% endif %}
+                </div>
+                <a href="{% url 'recipes:collection_detail' collection.pk %}" class="btn">View Collection</a>
+            </div>
+        {% empty %}
+            <p>No collections found. Create your first collection!</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

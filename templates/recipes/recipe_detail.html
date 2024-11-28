@@ -147,6 +147,26 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Add this where you want the collection button to appear -->
+            {% if user.is_authenticated %}
+                <div class="collection-actions">
+                    <button class="btn btn-add" onclick="showCollectionModal({{ recipe.pk }})">
+                        Add to Collection
+                    </button>
+                </div>
+
+                <!-- Add this modal at the bottom of your template -->
+                <div id="collection-modal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h3>Add to Collection</h3>
+                        <div id="collections-list">
+                            <!-- Collections will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
         </div>
     </div>
 {% endblock %}
@@ -161,5 +181,50 @@
             console.log('Favorite button found:', favoriteButton.dataset.recipeId);
         }
     });
+
+    function addToCollection(recipeId) {
+        fetch(`/api/collections/user/`)
+            .then(response => response.json())
+            .then(collections => {
+                const modal = document.getElementById('collection-modal');
+                const list = document.getElementById('collections-list');
+                list.innerHTML = collections.map(collection => `
+                    <div class="collection-item">
+                        <button onclick="saveToCollection(${collection.id}, ${recipeId})">
+                            ${collection.name}
+                        </button>
+                    </div>
+                `).join('');
+                modal.style.display = 'block';
+            });
+    }
+
+    function saveToCollection(collectionId, recipeId) {
+        fetch(`/collections/${collectionId}/add/${recipeId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById('collection-modal').style.display = 'none';
+                alert('Recipe added to collection!');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to add recipe to collection');
+        });
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('collection-modal');
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
 </script>
 {% endblock %}

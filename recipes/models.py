@@ -3,7 +3,27 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.text import slugify
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 import json
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    is_premium = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.user.username}'s profile"
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    if not hasattr(instance, 'profile'):
+        UserProfile.objects.create(user=instance)
+    instance.profile.save()
 
 # Create your models here.
 
@@ -137,3 +157,38 @@ class ShareCount(models.Model):
     
     class Meta:
         unique_together = ['recipe', 'platform']
+
+class Collection(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='collections')
+    recipes = models.ManyToManyField(Recipe, related_name='collections')
+    is_public = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Free tier limitations
+    MAX_FREE_COLLECTIONS = 3
+    MAX_RECIPES_PER_COLLECTION = 10
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return self.name
+    
+    @property
+    def recipe_count(self):
+        return self.recipes.count()
+    
+    def can_add_recipe(self, user):
+        if hasattr(user, 'profile') and user.profile.is_premium:
+            return True
+        return self.recipes.count() < self.MAX_RECIPES_PER_COLLECTION
+    
+    @classmethod
+    def can_create_collection(cls, user):
+        if hasattr(user, 'profile') and user.profile.is_premium:
+            return True
+        return user.collections.count() < cls.MAX_FREE_COLLECTIONS
+    

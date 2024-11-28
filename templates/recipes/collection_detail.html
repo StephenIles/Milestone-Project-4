@@ -1,0 +1,70 @@
+{% extends 'recipes/base.html' %}
+{% load static %}
+
+{% block content %}
+{% csrf_token %}
+<div class="collection-detail">
+    <div class="collection-header">
+        <h1>{{ collection.name }}</h1>
+        {% if collection.owner == request.user %}
+            <div class="collection-actions">
+                <a href="{% url 'recipes:collection_edit' collection.pk %}" class="btn btn-edit">Edit</a>
+                <a href="{% url 'recipes:collection_delete' collection.pk %}" class="btn btn-delete">Delete</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="collection-meta">
+        <p class="collection-description">{{ collection.description }}</p>
+        <div class="collection-info">
+            <span>Created by: {{ collection.owner.username }}</span>
+            <span>{{ collection.recipe_count }} recipes</span>
+            {% if collection.is_public %}
+                <span class="public-badge">Public Collection</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="collection-recipes">
+        <h2>Recipes in this Collection</h2>
+        
+        {% if collection.owner == request.user %}
+            {% if can_add %}
+                <p class="add-recipe-prompt">Add recipes to your collection from any recipe page!</p>
+            {% else %}
+                <div class="upgrade-prompt">
+                    <p>Want to add more recipes? <a href="#">Upgrade to Premium</a></p>
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <div class="recipe-grid">
+            {% for recipe in collection.recipes.all %}
+                <div class="recipe-card">
+                    {% if recipe.image %}
+                        <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+                    {% endif %}
+                    <h3>{{ recipe.title }}</h3>
+                    <p>{{ recipe.description|truncatewords:20 }}</p>
+                    
+                    {% if collection.owner == request.user %}
+                        <button class="btn btn-remove" onclick="removeFromCollection({{ collection.pk }}, {{ recipe.pk }})">
+                            Remove from Collection
+                        </button>
+                    {% endif %}
+                    
+                    <a href="{% url 'recipes:recipe_detail' recipe.pk %}" class="btn btn-view">
+                        View Recipe
+                    </a>
+                </div>
+            {% empty %}
+                <p class="no-recipes">No recipes in this collection yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/collections.js' %}"></script>
+{% endblock %}

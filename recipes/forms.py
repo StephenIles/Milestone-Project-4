@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Recipe, Rating, Comment, Tag, Category
+from .models import Recipe, Rating, Comment, Tag, Category, Collection
 from django.template.defaultfilters import slugify
 
 class UserRegistrationForm(UserCreationForm):
@@ -139,3 +139,11 @@ class RecipeSearchForm(forms.Form):
             ('2', '2+ Stars'),
         ]
     )
+
+class CollectionForm(forms.ModelForm):
+    class Meta:
+        model = Collection
+        fields = ['name', 'description', 'is_public']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+        }
