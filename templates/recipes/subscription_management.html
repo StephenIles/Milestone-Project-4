@@ -1,0 +1,81 @@
+{% extends 'recipes/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Subscription Management</h1>
+    
+    {% csrf_token %}
+    
+    <div class="subscription-status">
+        <h2>Current Status</h2>
+        {% if user.userprofile.subscription_active %}
+            {% if user.userprofile.subscription_cancelled %}
+                <p class="status pending-cancellation">Subscription Cancelled</p>
+                {% if user.userprofile.subscription_end_date %}
+                    <p>Your premium access will end on: {{ user.userprofile.subscription_end_date|date }}</p>
+                    <p>You'll continue to have access to premium features until this date.</p>
+                {% endif %}
+                <a href="{% url 'recipes:subscription' %}" class="btn btn-primary">Reactivate Subscription</a>
+            {% else %}
+                <p class="status active">Active Premium Subscription</p>
+                {% if user.userprofile.subscription_end_date %}
+                    <p>Your subscription will renew on: {{ user.userprofile.subscription_end_date|date }}</p>
+                {% endif %}
+                <button id="cancelSubscription" class="btn btn-danger">Cancel Subscription</button>
+            {% endif %}
+            <p id="cancelStatus" style="display: none;"></p>
+        {% else %}
+            <p class="status inactive">No Active Subscription</p>
+            <p>Upgrade to premium to access advanced features!</p>
+            <a href="{% url 'recipes:subscription' %}" class="btn btn-primary">Upgrade to Premium</a>
+        {% endif %}
+    </div>
+
+    <div class="subscription-features">
+        <h2>Premium Features</h2>
+        <ul>
+            <li>✨ Meal Planning</li>
+            <li>✨ Shopping List Generation</li>
+            <li>✨ Unlimited Collections</li>
+            <li>✨ Advanced Recipe Features</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+document.getElementById('cancelSubscription')?.addEventListener('click', async () => {
+    if (confirm('Are you sure you want to cancel your subscription? You will continue to have access until the end of your current billing period.')) {
+        const statusElement = document.getElementById('cancelStatus');
+        const button = document.getElementById('cancelSubscription');
+        
+        try {
+            button.disabled = true;
+            statusElement.textContent = 'Processing...';
+            statusElement.style.display = 'block';
+            
+            const response = await fetch('{% url "recipes:cancel_subscription" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                statusElement.textContent = 'Subscription cancelled successfully. The page will refresh...';
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                statusElement.textContent = `Error: ${data.error || 'Failed to cancel subscription'}`;
+                button.disabled = false;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            statusElement.textContent = 'An error occurred. Please try again.';
+            button.disabled = false;
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -24,6 +24,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 from django.contrib.auth.models import User
+from datetime import datetime
 
 # Initialize Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -716,7 +717,7 @@ def create_checkout_session(request):
 
 @csrf_exempt
 def stripe_webhook(request):
-    print("\n=== Webhook Received ===")  # Debug print
+    print("\n=== Webhook Received ===")
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
     
@@ -724,34 +725,34 @@ def stripe_webhook(request):
         event = stripe.Webhook.construct_event(
             payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
         )
-        print(f"Event Type: {event.type}")  # Debug print
+        print(f"Event Type: {event.type}")
         
         if event.type == 'checkout.session.completed':
             session = event.data.object
             print(f"Session ID: {session.id}")
             print(f"Client Reference ID: {session.client_reference_id}")
+            print(f"Subscription ID: {session.subscription}")
             
             try:
                 user = User.objects.get(id=session.client_reference_id)
                 print(f"Found user: {user.username}")
                 
-                # Check current premium status
-                print(f"Current premium status: {user.userprofile.is_premium}")
-                
-                # Update premium status
+                # Update the UserProfile with subscription details
                 user.userprofile.is_premium = True
+                user.userprofile.stripe_subscription_id = session.subscription
+                user.userprofile.subscription_cancelled = False  # Reset cancelled flag
+                
+                # Get subscription details from Stripe
+                subscription = stripe.Subscription.retrieve(session.subscription)
+                user.userprofile.subscription_end_date = datetime.fromtimestamp(subscription.current_period_end)
                 user.userprofile.save()
                 
-                # Verify the update
-                user.refresh_from_db()
-                print(f"New premium status: {user.userprofile.is_premium}")
-                print(f"Successfully updated {user.username} to premium!")
+                print(f"Updated user {user.username} to premium with subscription ID: {session.subscription}")
                 
             except User.DoesNotExist:
                 print(f"User not found with ID: {session.client_reference_id}")
             except Exception as e:
                 print(f"Error updating user profile: {str(e)}")
-                print(f"Error type: {type(e)}")
                 
     except Exception as e:
         print(f"Webhook error: {str(e)}")
@@ -759,11 +760,64 @@ def stripe_webhook(request):
 
     return HttpResponse(status=200)
 
+def handle_successful_subscription(session):
+    try:
+        user = User.objects.get(id=session.client_reference_id)
+        print(f"Found user: {user.username}")
+        
+        # Update subscription details
+        user.userprofile.is_premium = True
+        user.userprofile.stripe_subscription_id = session.subscription
+        user.userprofile.subscription_end_date = None  # Will be updated when we get more details
+        user.userprofile.save()
+        
+        print(f"Successfully updated {user.username} to premium!")
+        
+    except User.DoesNotExist:
+        print(f"User not found with ID: {session.client_reference_id}")
+    except Exception as e:
+        print(f"Error updating user profile: {str(e)}")
+
+def handle_subscription_cancelled(subscription):
+    try:
+        # Find user by Stripe subscription ID
+        user_profile = UserProfile.objects.get(stripe_subscription_id=subscription.id)
+        
+        # Update user's premium status
+        user_profile.is_premium = False
+        user_profile.stripe_subscription_id = None
+        user_profile.subscription_end_date = None
+        user_profile.save()
+        
+        print(f"Subscription cancelled for user: {user_profile.user.username}")
+        
+    except UserProfile.DoesNotExist:
+        print(f"No user found with subscription ID: {subscription.id}")
+    except Exception as e:
+        print(f"Error handling subscription cancellation: {str(e)}")
+
+def handle_subscription_updated(subscription):
+    try:
+        user_profile = UserProfile.objects.get(stripe_subscription_id=subscription.id)
+        
+        # Check subscription status
+        if subscription.status == 'active':
+            user_profile.is_premium = True
+            user_profile.subscription_end_date = datetime.fromtimestamp(subscription.current_period_end)
+        else:
+            user_profile.is_premium = False
+            user_profile.subscription_end_date = None
+            
+        user_profile.save()
+        print(f"Subscription updated for user: {user_profile.user.username}")
+        
+    except UserProfile.DoesNotExist:
+        print(f"No user found with subscription ID: {subscription.id}")
+    except Exception as e:
+        print(f"Error handling subscription update: {str(e)}")
+
 def subscription_success(request):
     return render(request, 'recipes/subscription_success.html')
-
-def subscription_cancel(request):
-    return render(request, 'your_template.html')
 
 @login_required
 def check_premium_status(request):
@@ -771,3 +825,43 @@ def check_premium_status(request):
         'is_premium': request.user.userprofile.is_premium,
         'username': request.user.username
     })
+
+@login_required
+def subscription_management(request):
+    return render(request, 'recipes/subscription_management.html')
+
+@login_required
+@require_POST
+def cancel_subscription(request):
+    try:
+        user_profile = request.user.userprofile
+        print(f"Attempting to cancel subscription for user: {request.user.username}")
+        
+        if not user_profile.stripe_subscription_id:
+            return JsonResponse({'error': 'No active subscription found'}, status=400)
+        
+        try:
+            # Cancel the subscription in Stripe
+            subscription = stripe.Subscription.modify(
+                user_profile.stripe_subscription_id,
+                cancel_at_period_end=True
+            )
+            
+            # Update the user profile
+            user_profile.subscription_cancelled = True  # Set cancelled flag
+            user_profile.subscription_end_date = datetime.fromtimestamp(subscription.current_period_end)
+            user_profile.save()
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Subscription will end at the current period end',
+                'end_date': subscription.current_period_end
+            })
+            
+        except stripe.error.StripeError as e:
+            print(f"Stripe error: {str(e)}")
+            return JsonResponse({'error': str(e)}, status=400)
+            
+    except Exception as e:
+        print(f"Error cancelling subscription: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=400)

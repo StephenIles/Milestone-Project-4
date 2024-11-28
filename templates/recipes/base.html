@@ -21,14 +21,13 @@
                 <li><a href="{% url 'recipes:recipe_search' %}">Search</a></li>
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'recipes:profile' %}">My Profile</a></li>
-                    <li><a href="{% url 'recipes:logout' %}">Logout</a></li>
                     <li><a href="{% url 'recipes:favorite_list' %}">My Favorites</a></li>
                     <li><a href="{% url 'recipes:collection_list' %}">My Collections</a></li>
-                    {% if user.userprofile.is_premium %}
+                    <li><a href="{% url 'recipes:subscription_management' %}">Subscription Management</a></li>
+                    {% if user.userprofile.subscription_active %}
                         <li><a href="{% url 'recipes:meal_planner' %}">Meal Planner</a></li>
-                    {% else %}
-                        <li><a href="{% url 'recipes:subscription' %}">Upgrade to Premium</a></li>
                     {% endif %}
+                    <li><a href="{% url 'recipes:logout' %}">Logout</a></li>
                 {% else %}
                     <li><a href="{% url 'login' %}">Login</a></li>
                     <li><a href="{% url 'recipes:register' %}">Register</a></li>

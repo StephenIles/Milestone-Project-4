@@ -7,13 +7,27 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 import json
 from decimal import Decimal
+from django.utils import timezone
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='userprofile')
     is_premium = models.BooleanField(default=False)
+    stripe_subscription_id = models.CharField(max_length=100, null=True, blank=True)
+    subscription_end_date = models.DateTimeField(null=True, blank=True)
+    subscription_cancelled = models.BooleanField(default=False)
     
     def __str__(self):
         return f"{self.user.username}'s profile"
+    
+    @property
+    def subscription_active(self):
+        """
+        Returns True if the user has an active subscription or is within their paid period
+        even if they've cancelled (until the end date).
+        """
+        if self.subscription_end_date:
+            return self.subscription_end_date > timezone.now()
+        return self.is_premium
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
