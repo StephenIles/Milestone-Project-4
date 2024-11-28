@@ -29,4 +29,12 @@ urlpatterns = [
     path('collections/<int:collection_pk>/add/<int:recipe_pk>/', views.collection_add_recipe, name='collection_add_recipe'),
     path('collections/<int:collection_pk>/remove/<int:recipe_pk>/', views.collection_remove_recipe, name='collection_remove_recipe'),
     path('api/collections/', views.get_user_collections, name='get_user_collections'),
+    path('meal-planner/', views.meal_planner, name='meal_planner'),
+    path('meal-planner/update/<int:plan_id>/', views.update_meal, name='update_meal'),
+    path('meal-planner/shopping-list/<int:weekly_plan_id>/', views.shopping_list, name='shopping_list'),
+    path('meal-planner/shopping-list/<int:weekly_plan_id>/download/', 
+         views.download_shopping_list, name='download_shopping_list'),
+    path('meal-planner/shopping-list/<int:weekly_plan_id>/pdf/', 
+         views.download_shopping_list_pdf, 
+         name='download_shopping_list_pdf'),
 ] 

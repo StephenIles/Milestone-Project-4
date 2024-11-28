@@ -3,10 +3,18 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q, Count, Avg
 from django.contrib.auth import logout
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
+from django.utils import timezone
+from datetime import timedelta, date
 from .forms import UserRegistrationForm, RecipeForm, RatingForm, CommentForm, RecipeSearchForm, CollectionForm
-from .models import Recipe, Rating, Comment, Category, Favorite, Tag, ShareCount, Collection
+from .models import Recipe, Rating, Comment, Category, Favorite, Tag, ShareCount, Collection, MealPlan, WeeklyMealPlan
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+import io
+import json
 
 def home(request):
     latest_recipes = Recipe.objects.all()  # Get all recipes for now
@@ -392,3 +400,263 @@ def get_user_collections(request):
             'status': 'error',
             'message': str(e)
         }, status=400)
+
+@login_required
+def meal_planner(request):
+    if not request.user.profile.is_premium:
+        messages.error(request, 'Meal planning is a premium feature. Please upgrade to access.')
+        return redirect('recipes:home')
+    
+    # Get or create this week's meal plan
+    today = date.today()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+    
+    weekly_plan, created = WeeklyMealPlan.objects.get_or_create(
+        user=request.user,
+        start_date=start_of_week,
+        end_date=end_of_week
+    )
+    
+    # Get daily plans for the week
+    daily_plans = {}
+    for i in range(7):
+        current_date = start_of_week + timedelta(days=i)
+        plan, created = MealPlan.objects.get_or_create(
+            user=request.user,
+            date=current_date,
+            defaults={'notes': ''}
+        )
+        daily_plans[current_date] = plan
+        if created:
+            weekly_plan.daily_plans.add(plan)
+    
+    # Get ALL recipes, not just user's recipes
+    recipes = Recipe.objects.all()  # Changed this line to get all recipes
+    
+    context = {
+        'weekly_plan': weekly_plan,
+        'daily_plans': daily_plans,
+        'recipes': recipes,
+        'shopping_list': weekly_plan.get_weekly_shopping_list()
+    }
+    
+    return render(request, 'recipes/meal_planner.html', context)
+
+@login_required
+def update_meal(request, plan_id):
+    if not request.user.profile.is_premium:
+        return JsonResponse({'error': 'Premium feature only'}, status=403)
+    
+    try:
+        plan = get_object_or_404(MealPlan, id=plan_id, user=request.user)
+        
+        if request.method == 'POST':
+            data = json.loads(request.body)
+            meal_type = data.get('meal_type')
+            recipe_id = data.get('recipe_id')
+            
+            print(f"Updating meal: {meal_type} with recipe: {recipe_id}")  # Debug print
+            
+            if recipe_id:
+                recipe = get_object_or_404(Recipe, id=recipe_id)
+                if meal_type == 'breakfast':
+                    plan.breakfast = recipe
+                elif meal_type == 'lunch':
+                    plan.lunch = recipe
+                elif meal_type == 'dinner':
+                    plan.dinner = recipe
+            else:
+                if meal_type == 'breakfast':
+                    plan.breakfast = None
+                elif meal_type == 'lunch':
+                    plan.lunch = None
+                elif meal_type == 'dinner':
+                    plan.dinner = None
+            
+            plan.save()
+            return JsonResponse({'status': 'success'})
+        
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+    except Exception as e:
+        print(f"Error updating meal: {str(e)}")  # Debug print
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def shopping_list(request, weekly_plan_id):
+    if not request.user.profile.is_premium:
+        messages.error(request, 'Shopping list is a premium feature. Please upgrade to access.')
+        return redirect('recipes:home')
+    
+    weekly_plan = get_object_or_404(WeeklyMealPlan, id=weekly_plan_id, user=request.user)
+    shopping_list = weekly_plan.get_weekly_shopping_list()
+    
+    return render(request, 'recipes/shopping_list.html', {
+        'weekly_plan': weekly_plan,
+        'shopping_list': shopping_list
+    })
+
+@login_required
+def download_shopping_list(request, weekly_plan_id):
+    if not request.user.profile.is_premium:
+        messages.error(request, 'Shopping list download is a premium feature. Please upgrade to access.')
+        return redirect('recipes:meal_planner')
+    
+    try:
+        weekly_plan = get_object_or_404(WeeklyMealPlan, id=weekly_plan_id, user=request.user)
+        shopping_list = weekly_plan.get_weekly_shopping_list()
+        
+        # Create the PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=letter,
+            rightMargin=72,
+            leftMargin=72,
+            topMargin=72,
+            bottomMargin=72
+        )
+        
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Add title
+        title = Paragraph(
+            f"Shopping List for Week of {weekly_plan.start_date.strftime('%B %d, %Y')}",
+            styles['Title']
+        )
+        elements.append(title)
+        elements.append(Spacer(1, 20))
+        
+        if shopping_list:
+            # Create table data
+            data = [['Ingredient', 'Quantity', 'Unit']]
+            for ingredient, details in shopping_list.items():
+                data.append([
+                    ingredient,
+                    str(details['quantity']),
+                    details['unit']
+                ])
+            
+            # Create table
+            table = Table(data, colWidths=[250, 100, 100])
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 12),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 10),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('PADDING', (0, 0), (-1, -1), 6),
+            ]))
+            elements.append(table)
+        else:
+            elements.append(Paragraph("No items in shopping list", styles['Normal']))
+        
+        # Build PDF
+        doc.build(elements)
+        
+        # FileResponse
+        pdf = buffer.getvalue()
+        buffer.close()
+        
+        # Create the HTTP response
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="shopping_list_{weekly_plan.start_date.strftime("%Y-%m-%d")}.pdf"'
+        response.write(pdf)
+        
+        return response
+        
+    except Exception as e:
+        print(f"PDF Generation Error: {str(e)}")  # For debugging
+        messages.error(request, 'Error generating PDF. Please try again.')
+        return redirect('recipes:meal_planner')
+
+@login_required
+def download_shopping_list_pdf(request, weekly_plan_id):
+    try:
+        if not request.user.profile.is_premium:
+            messages.error(request, 'PDF download is a premium feature. Please upgrade to access.')
+            return redirect('recipes:meal_planner')
+        
+        weekly_plan = get_object_or_404(WeeklyMealPlan, id=weekly_plan_id, user=request.user)
+        shopping_list = weekly_plan.get_weekly_shopping_list()
+        
+        # Create the PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=letter,
+            rightMargin=72,
+            leftMargin=72,
+            topMargin=72,
+            bottomMargin=72
+        )
+        
+        # Create the elements list to hold all PDF elements
+        elements = []
+        
+        # Add title
+        styles = getSampleStyleSheet()
+        title = Paragraph(
+            f"Shopping List for Week of {weekly_plan.start_date.strftime('%B %d, %Y')}",
+            styles['Title']
+        )
+        elements.append(title)
+        elements.append(Spacer(1, 20))
+        
+        # Create table data
+        if shopping_list:
+            data = [['Ingredient', 'Quantity', 'Unit']]
+            for ingredient, details in shopping_list.items():
+                data.append([
+                    ingredient,
+                    str(details['quantity']),
+                    details['unit']
+                ])
+            
+            # Create table
+            table = Table(data, colWidths=[250, 100, 100])
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 12),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 10),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('PADDING', (0, 0), (-1, -1), 6),
+            ]))
+            elements.append(table)
+        else:
+            elements.append(Paragraph("No items in shopping list", styles['Normal']))
+        
+        # Build PDF
+        doc.build(elements)
+        
+        # FileResponse
+        pdf = buffer.getvalue()
+        buffer.close()
+        
+        # Create the HTTP response
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="shopping_list_{weekly_plan.start_date.strftime("%Y-%m-%d")}.pdf"'
+        response.write(pdf)
+        
+        return response
+        
+    except Exception as e:
+        print(f"PDF Generation Error: {str(e)}")  # For debugging
+        messages.error(request, 'Error generating PDF. Please try again.')
+        return redirect('recipes:meal_planner')

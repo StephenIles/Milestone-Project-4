@@ -6,6 +6,7 @@ from django.utils.text import slugify
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 import json
+from decimal import Decimal
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -192,3 +193,77 @@ class Collection(models.Model):
             return True
         return user.collections.count() < cls.MAX_FREE_COLLECTIONS
     
+class MealPlan(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='meal_plans')
+    date = models.DateField()
+    breakfast = models.ForeignKey(Recipe, on_delete=models.SET_NULL, null=True, blank=True, related_name='breakfast_plans')
+    lunch = models.ForeignKey(Recipe, on_delete=models.SET_NULL, null=True, blank=True, related_name='lunch_plans')
+    dinner = models.ForeignKey(Recipe, on_delete=models.SET_NULL, null=True, blank=True, related_name='dinner_plans')
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['date']
+        unique_together = ['user', 'date']
+
+    def __str__(self):
+        return f"{self.user.username}'s meal plan for {self.date}"
+
+    @classmethod
+    def can_create_plan(cls, user):
+        return hasattr(user, 'profile') and user.profile.is_premium
+
+    def get_shopping_list(self):
+        """Generate a combined shopping list for all meals in the plan"""
+        shopping_list = {}
+        
+        meals = [self.breakfast, self.lunch, self.dinner]
+        for meal in meals:
+            if meal:
+                for ingredient, details in meal.ingredients.items():
+                    if ingredient in shopping_list:
+                        # Convert quantities to same unit if possible and add
+                        current_qty = Decimal(str(shopping_list[ingredient]['quantity']))
+                        add_qty = Decimal(str(details['quantity']))
+                        if shopping_list[ingredient]['unit'] == details['unit']:
+                            shopping_list[ingredient]['quantity'] = current_qty + add_qty
+                    else:
+                        shopping_list[ingredient] = {
+                            'quantity': details['quantity'],
+                            'unit': details['unit']
+                        }
+        
+        return shopping_list
+
+class WeeklyMealPlan(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='weekly_meal_plans')
+    start_date = models.DateField()
+    end_date = models.DateField()
+    daily_plans = models.ManyToManyField(MealPlan, related_name='weekly_plan')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-start_date']
+
+    def __str__(self):
+        return f"{self.user.username}'s meal plan for week of {self.start_date}"
+
+    def get_weekly_shopping_list(self):
+        """Combine shopping lists from all daily plans"""
+        weekly_list = {}
+        
+        for plan in self.daily_plans.all():
+            daily_list = plan.get_shopping_list()
+            for ingredient, details in daily_list.items():
+                if ingredient in weekly_list:
+                    current_qty = Decimal(str(weekly_list[ingredient]['quantity']))
+                    add_qty = Decimal(str(details['quantity']))
+                    if weekly_list[ingredient]['unit'] == details['unit']:
+                        weekly_list[ingredient]['quantity'] = current_qty + add_qty
+                else:
+                    weekly_list[ingredient] = details.copy()
+        
+        return weekly_list
+

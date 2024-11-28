@@ -1,0 +1,38 @@
+{% extends 'recipes/base.html' %}
+
+{% block content %}
+<div class="shopping-list">
+    <div class="list-header">
+        <h1>Shopping List for {{ weekly_plan.start_date|date:"M d" }} - {{ weekly_plan.end_date|date:"M d, Y" }}</h1>
+        <div class="list-actions">
+            <a href="{% url 'recipes:meal_planner' %}" class="btn btn-secondary">Back to Meal Planner</a>
+            <a href="{% url 'recipes:download_shopping_list' weekly_plan.id %}" class="btn btn-primary">Download PDF</a>
+        </div>
+    </div>
+
+    <div class="ingredients-list">
+        {% if shopping_list %}
+            <table class="shopping-table">
+                <thead>
+                    <tr>
+                        <th>Ingredient</th>
+                        <th>Quantity</th>
+                        <th>Unit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ingredient, details in shopping_list.items %}
+                    <tr>
+                        <td>{{ ingredient }}</td>
+                        <td>{{ details.quantity }}</td>
+                        <td>{{ details.unit }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="no-items">No ingredients in your shopping list yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
