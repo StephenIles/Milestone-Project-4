@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Recipe, Rating, Comment, Tag
+from .models import Recipe, Rating, Comment, Tag, Category
 from django.template.defaultfilters import slugify
 
 class UserRegistrationForm(UserCreationForm):
@@ -100,3 +100,42 @@ class CommentForm(forms.ModelForm):
         widgets = {
             'text': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Share your thoughts about this recipe...'})
         }
+
+class RecipeSearchForm(forms.Form):
+    q = forms.CharField(
+        required=False,
+        label='Search',
+        widget=forms.TextInput(attrs={
+            'class': 'search-input',
+            'placeholder': 'Search recipes...'
+        })
+    )
+    category = forms.ModelChoiceField(
+        required=False,
+        queryset=Category.objects.all(),
+        empty_label="All Categories"
+    )
+    tags = forms.ModelMultipleChoiceField(
+        required=False,
+        queryset=Tag.objects.all(),
+        widget=forms.CheckboxSelectMultiple
+    )
+    cooking_time = forms.ChoiceField(
+        required=False,
+        choices=[
+            ('', 'Any Time'),
+            ('15', 'Under 15 minutes'),
+            ('30', 'Under 30 minutes'),
+            ('60', 'Under 1 hour'),
+            ('120', 'Under 2 hours'),
+        ]
+    )
+    rating = forms.ChoiceField(
+        required=False,
+        choices=[
+            ('', 'Any Rating'),
+            ('4', '4+ Stars'),
+            ('3', '3+ Stars'),
+            ('2', '2+ Stars'),
+        ]
+    )

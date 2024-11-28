@@ -1,11 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Avg
 from django.contrib.auth import logout
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .forms import UserRegistrationForm, RecipeForm, RatingForm, CommentForm
+from .forms import UserRegistrationForm, RecipeForm, RatingForm, CommentForm, RecipeSearchForm
 from .models import Recipe, Rating, Comment, Category, Favorite, Tag
 
 def home(request):
@@ -201,3 +201,52 @@ def tag_detail(request, slug):
         'tag': tag,
         'recipes': recipes
     })
+
+def recipe_search(request):
+    form = RecipeSearchForm(request.GET)
+    recipes = Recipe.objects.all()
+    
+    if form.is_valid():
+        # Search query
+        q = form.cleaned_data.get('q')
+        if q:
+            recipes = recipes.filter(
+                Q(title__icontains=q) |
+                Q(description__icontains=q) |
+                Q(ingredients__icontains=q)
+            )
+        
+        # Category filter
+        category = form.cleaned_data.get('category')
+        if category:
+            recipes = recipes.filter(category=category)
+        
+        # Tags filter
+        tags = form.cleaned_data.get('tags')
+        if tags:
+            recipes = recipes.filter(tags__in=tags).distinct()
+        
+        # Cooking time filter
+        cooking_time = form.cleaned_data.get('cooking_time')
+        if cooking_time:
+            recipes = recipes.filter(cooking_time__lte=cooking_time)
+        
+        # Rating filter
+        rating = form.cleaned_data.get('rating')
+        if rating:
+            recipes = recipes.annotate(
+                avg_rating=Avg('ratings__value')
+            ).filter(avg_rating__gte=rating)
+    
+    # Annotate with average rating for display
+    recipes = recipes.annotate(
+        avg_rating=Avg('ratings__value')
+    )
+    
+    context = {
+        'form': form,
+        'recipes': recipes,
+        'search_query': request.GET.get('q', ''),
+    }
+    
+    return render(request, 'recipes/search.html', context)

@@ -1,0 +1,85 @@
+{% extends 'recipes/base.html' %}
+{% load static %}
+
+{% block title %}Search Recipes{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <h1>Search Recipes</h1>
+    
+    <form method="get" class="search-form">
+        <div class="search-main">
+            {{ form.q }}
+            <button type="submit" class="search-button">Search</button>
+        </div>
+        
+        <div class="search-filters">
+            <div class="filter-group">
+                <h3>Category</h3>
+                {{ form.category }}
+            </div>
+            
+            <div class="filter-group">
+                <h3>Tags</h3>
+                <div class="tag-filters">
+                    {{ form.tags }}
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <h3>Cooking Time</h3>
+                {{ form.cooking_time }}
+            </div>
+            
+            <div class="filter-group">
+                <h3>Rating</h3>
+                {{ form.rating }}
+            </div>
+        </div>
+    </form>
+    
+    <div class="search-results">
+        <h2>
+            {% if search_query %}
+                Search Results for "{{ search_query }}"
+            {% else %}
+                All Recipes
+            {% endif %}
+        </h2>
+        
+        {% if recipes %}
+            <div class="recipe-grid">
+                {% for recipe in recipes %}
+                    <div class="recipe-card">
+                        {% if recipe.image %}
+                            <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+                        {% endif %}
+                        <h3>{{ recipe.title }}</h3>
+                        <div class="recipe-meta">
+                            <span class="cooking-time">
+                                <i class="fas fa-clock"></i> {{ recipe.cooking_time }} mins
+                            </span>
+                            <span class="rating">
+                                {% if recipe.avg_rating %}
+                                    <i class="fas fa-star"></i> {{ recipe.avg_rating|floatformat:1 }}
+                                {% else %}
+                                    No ratings
+                                {% endif %}
+                            </span>
+                        </div>
+                        <p>{{ recipe.description|truncatewords:20 }}</p>
+                        <div class="recipe-tags">
+                            {% for tag in recipe.tags.all %}
+                                <span class="tag-badge">{{ tag.name }}</span>
+                            {% endfor %}
+                        </div>
+                        <a href="{% url 'recipes:recipe_detail' recipe.pk %}" class="btn">View Recipe</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-results">No recipes found matching your criteria.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

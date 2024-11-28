@@ -19,4 +19,5 @@ urlpatterns = [
     path('favorites/', views.favorite_recipes, name='favorite_list'),
     path('tags/', views.tag_list, name='tag_list'),
     path('tag/<slug:slug>/', views.tag_detail, name='tag_detail'),
+    path('search/', views.recipe_search, name='recipe_search'),
 ] 
