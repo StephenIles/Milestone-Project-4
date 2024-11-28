@@ -24,8 +24,10 @@
                     <li><a href="{% url 'recipes:logout' %}">Logout</a></li>
                     <li><a href="{% url 'recipes:favorite_list' %}">My Favorites</a></li>
                     <li><a href="{% url 'recipes:collection_list' %}">My Collections</a></li>
-                    {% if user.profile.is_premium %}
+                    {% if user.userprofile.is_premium %}
                         <li><a href="{% url 'recipes:meal_planner' %}">Meal Planner</a></li>
+                    {% else %}
+                        <li><a href="{% url 'recipes:subscription' %}">Upgrade to Premium</a></li>
                     {% endif %}
                 {% else %}
                     <li><a href="{% url 'login' %}">Login</a></li>
@@ -48,5 +50,6 @@
     <script src="{% static 'js/social_share.js' %}"></script>
     <script src="{% static 'js/collections.js' %}"></script>
     <script src="{% static 'js/meal_planner.js' %}"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

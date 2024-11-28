@@ -9,7 +9,7 @@ import json
 from decimal import Decimal
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='userprofile')
     is_premium = models.BooleanField(default=False)
     
     def __str__(self):
@@ -22,9 +22,9 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
-    if not hasattr(instance, 'profile'):
+    if not hasattr(instance, 'userprofile'):
         UserProfile.objects.create(user=instance)
-    instance.profile.save()
+    instance.userprofile.save()
 
 # Create your models here.
 
@@ -266,4 +266,22 @@ class WeeklyMealPlan(models.Model):
                     weekly_list[ingredient] = details.copy()
         
         return weekly_list
+
+class Subscription(models.Model):
+    PLAN_CHOICES = [
+        ('monthly', 'Monthly - $9.99'),
+        ('yearly', 'Yearly - $99.99'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    stripe_customer_id = models.CharField(max_length=50, blank=True, null=True)
+    stripe_subscription_id = models.CharField(max_length=50, blank=True, null=True)
+    plan = models.CharField(max_length=20, choices=PLAN_CHOICES)
+    active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s {self.plan} subscription"
+
 

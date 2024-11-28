@@ -37,4 +37,10 @@ urlpatterns = [
     path('meal-planner/shopping-list/<int:weekly_plan_id>/pdf/', 
          views.download_shopping_list_pdf, 
          name='download_shopping_list_pdf'),
+    path('subscription/', views.subscription_page, name='subscription'),
+    path('subscription/create-checkout-session/', views.create_checkout_session, name='create_checkout_session'),
+    path('subscription/success/', views.subscription_success, name='subscription_success'),
+    path('subscription/cancel/', views.subscription_cancel, name='subscription_cancel'),
+    path('webhook/stripe/', views.stripe_webhook, name='stripe_webhook'),
+    path('check-premium/', views.check_premium_status, name='check_premium_status'),
 ] 

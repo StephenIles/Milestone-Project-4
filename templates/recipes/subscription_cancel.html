@@ -1,0 +1,12 @@
+{% extends 'recipes/base.html' %}
+
+{% block content %}
+<div class="subscription-cancel">
+    <h1>Subscription Cancelled</h1>
+    <p>Your subscription process was cancelled. No charges were made.</p>
+    <div class="cancel-actions">
+        <a href="{% url 'recipes:subscription' %}" class="btn btn-primary">Try Again</a>
+        <a href="{% url 'recipes:home' %}" class="btn btn-secondary">Return Home</a>
+    </div>
+</div>
+{% endblock %}

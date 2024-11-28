@@ -1,0 +1,93 @@
+{% extends 'recipes/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="subscription-container">
+    <h1>Premium Membership</h1>
+    
+    <div class="pricing-cards">
+        <div class="pricing-card">
+            <h2>Monthly Plan</h2>
+            <div class="price">$9.99<span>/month</span></div>
+            <ul class="features">
+                <li>✓ Meal Planning</li>
+                <li>✓ Shopping List Generation</li>
+                <li>✓ PDF Export</li>
+                <li>✓ Recipe Collections</li>
+                <li>✓ Priority Support</li>
+            </ul>
+            <button class="subscribe-btn" data-plan-id="{{ monthly_price_id }}">Subscribe Monthly</button>
+        </div>
+
+        <div class="pricing-card featured">
+            <div class="best-value">Best Value</div>
+            <h2>Annual Plan</h2>
+            <div class="price">$99.99<span>/year</span></div>
+            <div class="savings">Save 17%</div>
+            <ul class="features">
+                <li>✓ All Monthly Features</li>
+                <li>✓ 2 Months Free</li>
+                <li>✓ Exclusive Recipes</li>
+                <li>✓ Advanced Analytics</li>
+                <li>✓ Early Access to New Features</li>
+            </ul>
+            <button class="subscribe-btn" data-plan-id="{{ yearly_price_id }}">Subscribe Yearly</button>
+        </div>
+    </div>
+</div>
+
+<!-- Stripe Elements container -->
+<div id="card-element"></div>
+<div id="card-errors" role="alert"></div>
+
+{% csrf_token %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    console.log('Stripe Key:', '{{ stripe_publishable_key }}');
+    console.log('Monthly Price ID:', '{{ monthly_price_id }}');
+    console.log('Yearly Price ID:', '{{ yearly_price_id }}');
+
+    const stripe = Stripe('{{ stripe_publishable_key }}');
+    const buttons = document.querySelectorAll('.subscribe-btn');
+
+    buttons.forEach(button => {
+        button.addEventListener('click', async (e) => {
+            e.preventDefault();
+            console.log('Button clicked with plan ID:', button.getAttribute('data-plan-id'));
+            
+            try {
+                const response = await fetch('{% url "recipes:create_checkout_session" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: JSON.stringify({
+                        plan_id: button.getAttribute('data-plan-id')
+                    })
+                });
+
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    throw new Error('No checkout URL received');
+                }
+            } catch (error) {
+                console.error('Detailed error:', error);
+                alert('Payment setup failed: ' + error.message);
+            }
+        });
+    });
+</script>
+{% endblock %}

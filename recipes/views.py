@@ -8,13 +8,25 @@ from django.views.decorators.http import require_POST
 from django.utils import timezone
 from datetime import timedelta, date
 from .forms import UserRegistrationForm, RecipeForm, RatingForm, CommentForm, RecipeSearchForm, CollectionForm
-from .models import Recipe, Rating, Comment, Category, Favorite, Tag, ShareCount, Collection, MealPlan, WeeklyMealPlan
+from .models import (
+    Recipe, Rating, Comment, Category, Favorite, Tag, 
+    ShareCount, Collection, MealPlan, WeeklyMealPlan, UserProfile
+)
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import io
 import json
+import stripe
+from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
+from django.contrib.auth.models import User
+
+# Initialize Stripe
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 def home(request):
     latest_recipes = Recipe.objects.all()  # Get all recipes for now
@@ -403,7 +415,7 @@ def get_user_collections(request):
 
 @login_required
 def meal_planner(request):
-    if not request.user.profile.is_premium:
+    if not request.user.userprofile.is_premium:
         messages.error(request, 'Meal planning is a premium feature. Please upgrade to access.')
         return redirect('recipes:home')
     
@@ -445,7 +457,7 @@ def meal_planner(request):
 
 @login_required
 def update_meal(request, plan_id):
-    if not request.user.profile.is_premium:
+    if not request.user.userprofile.is_premium:
         return JsonResponse({'error': 'Premium feature only'}, status=403)
     
     try:
@@ -484,7 +496,7 @@ def update_meal(request, plan_id):
 
 @login_required
 def shopping_list(request, weekly_plan_id):
-    if not request.user.profile.is_premium:
+    if not request.user.userprofile.is_premium:
         messages.error(request, 'Shopping list is a premium feature. Please upgrade to access.')
         return redirect('recipes:home')
     
@@ -498,7 +510,7 @@ def shopping_list(request, weekly_plan_id):
 
 @login_required
 def download_shopping_list(request, weekly_plan_id):
-    if not request.user.profile.is_premium:
+    if not request.user.userprofile.is_premium:
         messages.error(request, 'Shopping list download is a premium feature. Please upgrade to access.')
         return redirect('recipes:meal_planner')
     
@@ -581,7 +593,7 @@ def download_shopping_list(request, weekly_plan_id):
 @login_required
 def download_shopping_list_pdf(request, weekly_plan_id):
     try:
-        if not request.user.profile.is_premium:
+        if not request.user.userprofile.is_premium:
             messages.error(request, 'PDF download is a premium feature. Please upgrade to access.')
             return redirect('recipes:meal_planner')
         
@@ -660,3 +672,102 @@ def download_shopping_list_pdf(request, weekly_plan_id):
         print(f"PDF Generation Error: {str(e)}")  # For debugging
         messages.error(request, 'Error generating PDF. Please try again.')
         return redirect('recipes:meal_planner')
+
+def subscription_page(request):
+    context = {
+        'stripe_publishable_key': settings.STRIPE_PUBLISHABLE_KEY,
+        'monthly_price_id': settings.STRIPE_MONTHLY_PLAN_ID,
+        'yearly_price_id': settings.STRIPE_YEARLY_PLAN_ID
+    }
+    print("Context:", context)  # Debug print
+    return render(request, 'recipes/subscription.html', context)
+
+def create_checkout_session(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            plan_id = data.get('plan_id')
+            
+            print(f"Creating checkout session for user: {request.user.id}")  # Debug print
+            
+            checkout_session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price': plan_id,
+                    'quantity': 1,
+                }],
+                mode='subscription',
+                success_url=request.build_absolute_uri(reverse('recipes:subscription_success')),
+                cancel_url=request.build_absolute_uri(reverse('recipes:subscription')),
+                client_reference_id=str(request.user.id),  # This is important for the webhook
+            )
+            
+            print(f"Created checkout session: {checkout_session.id}")  # Debug print
+            return JsonResponse({
+                'id': checkout_session.id,
+                'url': checkout_session.url
+            })
+            
+        except Exception as e:
+            print(f"Error creating checkout session: {str(e)}")  # Debug print
+            return JsonResponse({'error': str(e)}, status=400)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+@csrf_exempt
+def stripe_webhook(request):
+    print("\n=== Webhook Received ===")  # Debug print
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+    
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+        print(f"Event Type: {event.type}")  # Debug print
+        
+        if event.type == 'checkout.session.completed':
+            session = event.data.object
+            print(f"Session ID: {session.id}")
+            print(f"Client Reference ID: {session.client_reference_id}")
+            
+            try:
+                user = User.objects.get(id=session.client_reference_id)
+                print(f"Found user: {user.username}")
+                
+                # Check current premium status
+                print(f"Current premium status: {user.userprofile.is_premium}")
+                
+                # Update premium status
+                user.userprofile.is_premium = True
+                user.userprofile.save()
+                
+                # Verify the update
+                user.refresh_from_db()
+                print(f"New premium status: {user.userprofile.is_premium}")
+                print(f"Successfully updated {user.username} to premium!")
+                
+            except User.DoesNotExist:
+                print(f"User not found with ID: {session.client_reference_id}")
+            except Exception as e:
+                print(f"Error updating user profile: {str(e)}")
+                print(f"Error type: {type(e)}")
+                
+    except Exception as e:
+        print(f"Webhook error: {str(e)}")
+        return HttpResponse(status=400)
+
+    return HttpResponse(status=200)
+
+def subscription_success(request):
+    return render(request, 'recipes/subscription_success.html')
+
+def subscription_cancel(request):
+    return render(request, 'your_template.html')
+
+@login_required
+def check_premium_status(request):
+    return JsonResponse({
+        'is_premium': request.user.userprofile.is_premium,
+        'username': request.user.username
+    })

@@ -1,0 +1,16 @@
+{% extends 'recipes/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Subscription Successful!</h1>
+    <p>Your account has been upgraded to premium.</p>
+    <p>You will be redirected to the home page in a moment...</p>
+</div>
+
+<script>
+    // Wait 2 seconds then refresh the page
+    setTimeout(function() {
+        window.location.href = '/';  // Redirect to home page
+    }, 2000);
+</script>
+{% endblock %}
