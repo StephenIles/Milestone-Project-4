@@ -15,8 +15,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'your-default-secret-key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['your-app-name.herokuapp.com', 'localhost', '127.0.0.1']
-CSRF_TRUSTED_ORIGINS = ['https://your-app-name.herokuapp.com']
+ALLOWED_HOSTS = ['the-cooking-pot-23a8162566ba.herokuapp.com', 'localhost', '127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['https://the-cooking-pot-23a8162566ba.herokuapp.com']
 
 # Application definition
 INSTALLED_APPS = [
@@ -39,6 +39,27 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF = 'recipe_website.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),
+            os.path.join(BASE_DIR, 'recipes', 'templates'),
+        ],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
 ]
 
 # Database configuration
@@ -65,21 +86,3 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Site ID
 SITE_ID = 1
-
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            os.path.join(BASE_DIR, 'templates'),  # If you have a global templates directory
-        ],
-        'APP_DIRS': True,  # This should be True to automatically look in app directories
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
