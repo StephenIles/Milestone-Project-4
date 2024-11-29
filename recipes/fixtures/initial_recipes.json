@@ -1,0 +1,195 @@
+[
+    {
+        "model": "recipes.recipe",
+        "pk": 1,
+        "fields": {
+            "title": "Classic Spaghetti Carbonara",
+            "description": "A traditional Italian pasta dish with eggs, cheese, pancetta and black pepper.",
+            "ingredients": {
+                "spaghetti": "400g",
+                "pancetta": "150g",
+                "eggs": "3 large",
+                "parmesan": "75g grated",
+                "black pepper": "to taste",
+                "salt": "to taste"
+            },
+            "instructions": "1. Cook spaghetti according to package instructions.\n2. Fry pancetta until crispy.\n3. Mix eggs, cheese, and pepper.\n4. Combine pasta with egg mixture and pancetta.\n5. Serve immediately with extra cheese.",
+            "cooking_time": 30,
+            "servings": 4,
+            "image": "https://images.unsplash.com/photo-1612874742237-6526221588e3?q=80&w=1471&auto=format&fit=crop",
+            "category": 1,
+            "created_at": "2024-01-01T12:00:00Z",
+            "updated_at": "2024-01-01T12:00:00Z",
+            "author": 1
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 2,
+        "fields": {
+            "title": "Classic Spanish Paella",
+            "description": "Traditional Spanish rice dish with seafood and saffron.",
+            "ingredients": {
+                "rice": "500g",
+                "prawns": "300g",
+                "mussels": "500g",
+                "chicken": "300g",
+                "saffron": "1 pinch",
+                "paprika": "1 tsp",
+                "olive oil": "4 tbsp"
+            },
+            "instructions": "1. Heat oil in paella pan.\n2. Cook chicken until golden.\n3. Add rice and saffron.\n4. Add stock and simmer.\n5. Add seafood.\n6. Cook until rice is done.",
+            "cooking_time": 45,
+            "servings": 6,
+            "image": "https://images.unsplash.com/photo-1534080564583-6be75777b70a?q=80&w=1470&auto=format&fit=crop",
+            "category": 2,
+            "created_at": "2024-01-02T12:00:00Z",
+            "updated_at": "2024-01-02T12:00:00Z",
+            "author": 1
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 3,
+        "fields": {
+            "title": "Homemade Mac and Cheese",
+            "description": "Creamy, comforting macaroni and cheese with a crispy top.",
+            "ingredients": {
+                "macaroni": "500g",
+                "cheddar": "300g",
+                "milk": "500ml",
+                "butter": "50g",
+                "flour": "50g",
+                "breadcrumbs": "100g"
+            },
+            "instructions": "1. Cook macaroni until al dente.\n2. Make cheese sauce with butter, flour, and milk.\n3. Add cheese and stir until melted.\n4. Combine with pasta.\n5. Top with breadcrumbs and bake.",
+            "cooking_time": 40,
+            "servings": 6,
+            "image": "https://images.unsplash.com/photo-1543339494-b4cd4f7ba686?q=80&w=1470&auto=format&fit=crop",
+            "category": 3,
+            "created_at": "2024-01-03T12:00:00Z",
+            "updated_at": "2024-01-03T12:00:00Z",
+            "author": 1
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 4,
+        "fields": {
+            "title": "Fluffy Pancakes",
+            "description": "Light and fluffy breakfast pancakes served with maple syrup.",
+            "ingredients": {
+                "flour": "200g",
+                "milk": "300ml",
+                "eggs": "2",
+                "butter": "30g melted",
+                "sugar": "2 tbsp",
+                "baking powder": "2 tsp"
+            },
+            "instructions": "1. Mix dry ingredients.\n2. Whisk wet ingredients separately.\n3. Combine both mixtures.\n4. Cook on hot griddle.\n5. Serve with maple syrup.",
+            "cooking_time": 20,
+            "servings": 4,
+            "image": "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?q=80&w=1480&auto=format&fit=crop",
+            "category": 4,
+            "created_at": "2024-01-04T12:00:00Z",
+            "updated_at": "2024-01-03T12:00:00Z",
+
+            "author": 1
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 5,
+        "fields": {
+            "title": "Chicken Caesar Salad",
+            "description": "Fresh romaine lettuce with grilled chicken, croutons, and classic Caesar dressing.",
+            "ingredients": {
+                "chicken breast": "2",
+                "romaine lettuce": "2 heads",
+                "croutons": "100g",
+                "parmesan": "50g",
+                "caesar dressing": "200ml"
+            },
+            "instructions": "1. Grill chicken until cooked.\n2. Chop lettuce.\n3. Slice chicken.\n4. Combine ingredients.\n5. Add dressing and toss.",
+            "cooking_time": 25,
+            "servings": 4,
+            "image": "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?q=80&w=1470&auto=format&fit=crop",
+            "category": 5,
+            "created_at": "2024-01-05T12:00:00Z",
+            "updated_at": "2024-01-03T12:00:00Z",
+            "author": 1
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 6,
+        "fields": {
+            "title": "Beef Stir Fry",
+            "description": "Quick and flavorful beef stir fry with vegetables.",
+            "ingredients": {
+                "beef strips": "500g",
+                "mixed vegetables": "400g",
+                "soy sauce": "4 tbsp",
+                "garlic": "3 cloves",
+                "ginger": "2cm piece",
+                "oil": "3 tbsp"
+            },
+            "instructions": "1. Marinate beef in soy sauce.\n2. Heat oil in wok.\n3. Stir-fry beef until browned.\n4. Add vegetables.\n5. Cook until tender.",
+            "cooking_time": 30,
+            "servings": 4,
+            "image": "https://images.unsplash.com/photo-1603133872878-684f208fb84b?q=80&w=1425&auto=format&fit=crop",
+            "category": 6,
+            "created_at": "2024-01-06T12:00:00Z",
+            "updated_at": "2024-01-03T12:00:00Z",
+            "author": 1
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 7,
+        "fields": {
+            "title": "Chocolate Chip Cookies",
+            "description": "Classic chewy chocolate chip cookies with crispy edges.",
+            "ingredients": {
+                "flour": "250g",
+                "butter": "200g",
+                "brown sugar": "150g",
+                "white sugar": "100g",
+                "eggs": "2",
+                "chocolate chips": "200g"
+            },
+            "instructions": "1. Cream butter and sugars.\n2. Add eggs and vanilla.\n3. Mix in dry ingredients.\n4. Add chocolate chips.\n5. Bake until golden.",
+            "cooking_time": 25,
+            "servings": 24,
+            "image": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?q=80&w=1470&auto=format&fit=crop",
+            "category": 7,
+            "created_at": "2024-01-07T12:00:00Z",
+            "updated_at": "2024-01-03T12:00:00Z",
+            "author": 1
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 8,
+        "fields": {
+            "title": "Guacamole",
+            "description": "Fresh and creamy guacamole with lime and cilantro.",
+            "ingredients": {
+                "avocados": "3 ripe",
+                "lime": "1",
+                "tomato": "1 medium",
+                "onion": "1/2 small",
+                "cilantro": "handful",
+                "salt": "to taste"
+            },
+            "instructions": "1. Mash avocados.\n2. Dice tomato and onion.\n3. Add lime juice.\n4. Mix in cilantro.\n5. Season to taste.",
+            "cooking_time": 15,
+            "servings": 6,
+            "image": "https://images.unsplash.com/photo-1615213612138-4d1195b1c0e9?q=80&w=1374&auto=format&fit=crop",
+            "category": 8,
+            "created_at": "2024-01-08T12:00:00Z",
+            "updated_at": "2024-01-03T12:00:00Z",
+            "author": 1
+        }
+    }
+]

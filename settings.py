@@ -13,7 +13,7 @@ SECRET_KEY = 'your-secret-key'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Application definition
 INSTALLED_APPS = [
@@ -81,3 +81,11 @@ LOGIN_REDIRECT_URL = 'recipes:home'
 LOGOUT_REDIRECT_URL = 'recipes:home'
 
 SITE_ID = 1
+
+# Make sure these are set for development
+DEBUG = True
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
+# Remove or set to False any HTTPS-related settings
+SECURE_SSL_REDIRECT = False
+SECURE_PROXY_SSL_HEADER = None

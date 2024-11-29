@@ -4,7 +4,7 @@
 {% block title %}My Profile - The Cooking Pot{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/profile.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -29,7 +29,7 @@
                     {% for recipe in recipes %}
                     <div class="recipe-card">
                         {% if recipe.image %}
-                            <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+                            <img src="{{ recipe.image }}" alt="{{ recipe.title }}">
                         {% else %}
                             <img src="{% static 'images/default-recipe.jpg' %}" alt="Default recipe image">
                         {% endif %}
@@ -58,7 +58,7 @@
                     {% for favorite in favorites %}
                     <div class="recipe-card">
                         {% if favorite.recipe.image %}
-                            <img src="{{ favorite.recipe.image.url }}" alt="{{ favorite.recipe.title }}">
+                            <img src="{{ favorite.recipe.image }}" alt="{{ favorite.recipe.title }}">
                         {% else %}
                             <img src="{% static 'images/default-recipe.jpg' %}" alt="Default recipe image">
                         {% endif %}

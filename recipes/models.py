@@ -146,14 +146,16 @@ class Recipe(models.Model):
         ordering = ['-created_at']
 
     def get_formatted_ingredients(self):
-        """Returns a formatted list of ingredients"""
-        formatted_ingredients = []
-        for ingredient, details in self.ingredients.items():
-            quantity = details.get('quantity', '')
-            unit = details.get('unit', '')
-            formatted = f"{quantity} {unit} {ingredient}".strip()
-            formatted_ingredients.append(formatted)
-        return formatted_ingredients
+        if isinstance(self.ingredients, str):
+            # If ingredients is stored as a string, return it split by lines
+            return self.ingredients.split('\n')
+        elif isinstance(self.ingredients, dict):
+            # If ingredients is stored as a dictionary
+            formatted = []
+            for ingredient, amount in self.ingredients.items():
+                formatted.append(f"{amount} {ingredient}")
+            return formatted
+        return []  # Return empty list if ingredients is None or invalid format
     
     @property
     def average_rating(self):

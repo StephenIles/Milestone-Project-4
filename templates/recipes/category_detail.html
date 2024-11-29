@@ -4,7 +4,8 @@
 {% block title %}{{ category.name }} - The Cooking Pot{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/categories.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/categories.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 {% endblock %}
 
 {% block content %}
@@ -23,7 +24,7 @@
                     <a href="{% url 'recipes:recipe_detail' recipe.pk %}">
                         {% if recipe.image %}
                             <div class="recipe-image">
-                                <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+                                <img src="{{ recipe.image }}" alt="{{ recipe.title }}">
                             </div>
                         {% endif %}
                         <div class="recipe-content">

@@ -4,7 +4,7 @@
 {% block title %}{{ recipe.title }} - The Cooking Pot{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/recipe_detail.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/recipe_detail.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -16,7 +16,7 @@
     <div class="recipe-header">
         {% if recipe.image %}
             <div class="recipe-image">
-                <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+                <img src="{{ recipe.image }}" alt="{{ recipe.title }}">
             </div>
         {% else %}
             <div class="recipe-image default-image">

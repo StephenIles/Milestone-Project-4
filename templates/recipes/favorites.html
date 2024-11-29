@@ -4,7 +4,7 @@
 {% block title %}My Favorites - The Cooking Pot{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/favorites.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/favorites.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -18,7 +18,7 @@
         <div class="favorite-card" data-recipe-id="{{ favorite.recipe.id }}">
             <div class="favorite-image">
                 {% if favorite.recipe.image %}
-                    <img src="{{ favorite.recipe.image.url }}" alt="{{ favorite.recipe.title }}">
+                    <img src="{{ favorite.recipe.image }}" alt="{{ favorite.recipe.title }}">
                 {% else %}
                     <img src="{% static 'images/default-recipe.jpg' %}" alt="Default recipe image">
                 {% endif %}
