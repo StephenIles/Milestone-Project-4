@@ -70,10 +70,9 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            os.path.join(BASE_DIR, 'templates'),
-            os.path.join(BASE_DIR, 'recipes', 'templates'),
+            os.path.join(BASE_DIR, 'templates'),  # If you have a global templates directory
         ],
-        'APP_DIRS': True,
+        'APP_DIRS': True,  # This should be True to automatically look in app directories
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
