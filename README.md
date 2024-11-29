@@ -1,5 +1,7 @@
 # Recipe Website
 
+Live Link - https://the-cooking-pot-23a8162566ba.herokuapp.com
+
 A Django-based recipe sharing platform where users can create, share, and discover recipes. The application follows a Full Stack MVC architecture using Django framework, providing a comprehensive solution for recipe management and social interaction.
 
 ## Project Overview
