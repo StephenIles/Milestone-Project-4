@@ -1,0 +1,33 @@
+{% extends 'recipes/base.html' %}
+
+{% block title %}{{ tag.name }} Recipes{% endblock %}
+
+{% block content %}
+<div class="tag-detail-container">
+    <div class="tag-header">
+        <h1>{{ tag.name }}</h1>
+        <p class="recipe-count">{{ tag.recipe_count }} recipes</p>
+    </div>
+
+    <div class="recipe-grid">
+        {% for recipe in recipes %}
+            <div class="recipe-card">
+                {% if recipe.image %}
+                    <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+                {% endif %}
+                <div class="recipe-info">
+                    <h2>{{ recipe.title }}</h2>
+                    <p>{{ recipe.description|truncatewords:20 }}</p>
+                    <div class="recipe-meta">
+                        <span>{{ recipe.cooking_time }} mins</span>
+                        <span>{{ recipe.servings }} servings</span>
+                    </div>
+                    <a href="{% url 'recipes:recipe_detail' recipe.pk %}" class="btn">View Recipe</a>
+                </div>
+            </div>
+        {% empty %}
+            <p>No recipes found with this tag.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

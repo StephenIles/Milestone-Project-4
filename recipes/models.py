@@ -8,6 +8,7 @@ from django.dispatch import receiver
 import json
 from decimal import Decimal
 from django.utils import timezone
+from django.db.models import Avg
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='userprofile')
@@ -58,7 +59,35 @@ class Category(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
+            # Handle duplicate slugs
+            original_slug = self.slug
+            counter = 1
+            while Category.objects.filter(slug=self.slug).exists():
+                self.slug = f"{original_slug}-{counter}"
+                counter += 1
         super().save(*args, **kwargs)
+
+class Tag(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+            # Handle duplicate slugs
+            original_slug = self.slug
+            counter = 1
+            while Tag.objects.filter(slug=self.slug).exists():
+                self.slug = f"{original_slug}-{counter}"
+                counter += 1
+        super().save(*args, **kwargs)
+
+    def get_recipe_count(self):
+        return self.recipes.count()
 
 class Recipe(models.Model):
     title = models.CharField(max_length=200)
@@ -73,6 +102,7 @@ class Recipe(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='recipe_images/', null=True, blank=True)
+    tags = models.ManyToManyField(Tag, related_name='recipes', blank=True)
     category = models.ForeignKey(
         Category, 
         on_delete=models.SET_NULL,
@@ -82,16 +112,27 @@ class Recipe(models.Model):
     )
 
     def clean(self):
+        super().clean()
+        errors = {}
+        
         # Validate ingredients format
-        if self.ingredients:
-            try:
-                for ingredient, details in self.ingredients.items():
-                    if not isinstance(details, dict):
-                        raise ValidationError("Each ingredient must have quantity and unit details")
-                    if 'quantity' not in details or 'unit' not in details:
-                        raise ValidationError("Each ingredient must specify quantity and unit")
-            except AttributeError:
-                raise ValidationError("Ingredients must be a dictionary")
+        if isinstance(self.ingredients, list):
+            errors['ingredients'] = 'Ingredients must be a dictionary with quantity and unit details'
+        elif isinstance(self.ingredients, dict):
+            for ingredient, details in self.ingredients.items():
+                if not isinstance(details, dict) or 'quantity' not in details or 'unit' not in details:
+                    errors['ingredients'] = 'Each ingredient must have quantity and unit details'
+        
+        # Validate servings
+        if self.servings is not None and self.servings <= 0:
+            errors['servings'] = 'Servings must be a positive number'
+        
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
@@ -105,17 +146,20 @@ class Recipe(models.Model):
             f"{details['quantity']} {details['unit']} {name}"
             for name, details in self.ingredients.items()
         ]
+    
+    @property
+    def average_rating(self):
+        avg = self.ratings.aggregate(Avg('value'))['value__avg']
+        return avg if avg is not None else 0.0
 
 class Rating(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='ratings')
+    recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE, related_name='ratings')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    value = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)]
-    )
+    value = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ['recipe', 'user']  # One rating per user per recipe
+        unique_together = ('recipe', 'user')
 
     def __str__(self):
         return f"{self.user.username} rated {self.recipe.title}: {self.value}"
@@ -145,26 +189,6 @@ class Favorite(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.recipe.title}"
 
-class Tag(models.Model):
-    name = models.CharField(max_length=50, unique=True)
-    slug = models.SlugField(max_length=50, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-    @property
-    def recipe_count(self):
-        return self.recipes.count()
-    
 class ShareCount(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='share_counts')
     platform = models.CharField(max_length=20)
@@ -203,7 +227,8 @@ class Collection(models.Model):
     
     @classmethod
     def can_create_collection(cls, user):
-        if hasattr(user, 'profile') and user.profile.is_premium:
+        """Check if user can create a new collection"""
+        if hasattr(user, 'userprofile') and user.userprofile.subscription_active:
             return True
         return user.collections.count() < cls.MAX_FREE_COLLECTIONS
     
@@ -229,13 +254,15 @@ class MealPlan(models.Model):
         return hasattr(user, 'profile') and user.profile.is_premium
 
     def get_shopping_list(self):
-        """Generate a combined shopping list for all meals in the plan"""
+        """Combine ingredients from all meals in the plan"""
         shopping_list = {}
-        
         meals = [self.breakfast, self.lunch, self.dinner]
+        
         for meal in meals:
             if meal:
-                for ingredient, details in meal.ingredients.items():
+                # Parse the JSON string to dictionary
+                meal_ingredients = json.loads(meal.ingredients)
+                for ingredient, details in meal_ingredients.items():
                     if ingredient in shopping_list:
                         # Convert quantities to same unit if possible and add
                         current_qty = Decimal(str(shopping_list[ingredient]['quantity']))
@@ -243,10 +270,7 @@ class MealPlan(models.Model):
                         if shopping_list[ingredient]['unit'] == details['unit']:
                             shopping_list[ingredient]['quantity'] = current_qty + add_qty
                     else:
-                        shopping_list[ingredient] = {
-                            'quantity': details['quantity'],
-                            'unit': details['unit']
-                        }
+                        shopping_list[ingredient] = details.copy()
         
         return shopping_list
 

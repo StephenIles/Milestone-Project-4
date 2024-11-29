@@ -31,12 +31,13 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'recipe_count', 'created_at')
-    search_fields = ('name',)
+    list_display = ['name', 'slug', 'get_recipe_count', 'created_at']
     prepopulated_fields = {'slug': ('name',)}
-    
-    def recipe_count(self, obj):
-        return obj.recipes.count()
-    recipe_count.short_description = 'Number of Recipes'
+    search_fields = ['name']
+    ordering = ['name']
+
+    def get_recipe_count(self, obj):
+        return obj.get_recipe_count()
+    get_recipe_count.short_description = 'Recipe Count'
 
 # Register your models here.

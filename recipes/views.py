@@ -132,15 +132,21 @@ def profile(request):
 def recipe_create(request):
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES)
-        if form.is_valid():
-            recipe = form.save(commit=False)
-            recipe.author = request.user
-            recipe.save()
-            messages.success(request, 'Recipe created successfully!')
-            return redirect('recipes:recipe_detail', pk=recipe.pk)
+        try:
+            ingredients = request.POST.get('ingredients')
+            if ingredients:
+                json.loads(ingredients)
+            if form.is_valid():
+                recipe = form.save(commit=False)
+                recipe.author = request.user
+                recipe.save()
+                messages.success(request, 'Recipe created successfully!')
+                return redirect('recipes:recipe_detail', pk=recipe.pk)
+        except json.JSONDecodeError:
+            form.add_error('ingredients', 'Invalid JSON format')
     else:
         form = RecipeForm()
-    return render(request, 'recipes/recipe_form.html', {'form': form, 'title': 'Create Recipe'})
+    return render(request, 'recipes/recipe_form.html', {'form': form})
 
 @login_required
 def recipe_edit(request, pk):
@@ -170,16 +176,14 @@ def logout_view(request):
     return redirect('recipes:home')
 
 def category_list(request):
-    categories = Category.objects.annotate(
-        recipe_count=Count('recipes')
-    )
-    return render(request, 'recipes/category_list.html', {
-        'categories': categories
-    })
+    """Display list of all categories"""
+    categories = Category.objects.annotate(recipe_count=Count('recipes'))
+    return render(request, 'recipes/category_list.html', {'categories': categories})
 
-def category_detail(request, slug):
-    category = get_object_or_404(Category, slug=slug)
-    recipes = category.recipes.all()
+def category_detail(request, pk):
+    """Display recipes for a specific category"""
+    category = get_object_or_404(Category, pk=pk)
+    recipes = Recipe.objects.filter(category=category)
     return render(request, 'recipes/category_detail.html', {
         'category': category,
         'recipes': recipes
@@ -210,18 +214,21 @@ def favorite_recipes(request):
     })
 
 def tag_list(request):
-    tags = Tag.objects.annotate(
-        recipe_count=Count('recipes')
-    ).order_by('-recipe_count')
+    """Display list of all tags with recipe counts"""
+    tags = Tag.objects.all()
+    for tag in tags:
+        tag.count = tag.get_recipe_count()
     return render(request, 'recipes/tag_list.html', {'tags': tags})
 
 def tag_detail(request, slug):
+    """Display recipes for a specific tag"""
     tag = get_object_or_404(Tag, slug=slug)
-    recipes = tag.recipes.all()
-    return render(request, 'recipes/tag_detail.html', {
+    recipes = Recipe.objects.filter(tags=tag).select_related('author', 'category')
+    context = {
         'tag': tag,
-        'recipes': recipes
-    })
+        'recipes': recipes,
+    }
+    return render(request, 'recipes/tag_detail.html', context)
 
 def recipe_search(request):
     form = RecipeSearchForm(request.GET)
@@ -312,21 +319,19 @@ def collection_detail(request, pk):
 
 @login_required
 def collection_create(request):
-    if not Collection.can_create_collection(request.user):
-        messages.error(request, 'You have reached the maximum number of collections for free accounts.')
-        return redirect('recipes:collection_list')
-    
     if request.method == 'POST':
         form = CollectionForm(request.POST)
         if form.is_valid():
-            collection = form.save(commit=False)
-            collection.owner = request.user
-            collection.save()
-            messages.success(request, 'Collection created successfully!')
-            return redirect('recipes:collection_detail', pk=collection.pk)
+            if Collection.can_create_collection(request.user):
+                collection = form.save(commit=False)
+                collection.owner = request.user
+                collection.save()
+                return redirect('recipes:collection_detail', pk=collection.pk)
+            else:
+                messages.error(request, 'You have reached your collection limit. Upgrade to premium for unlimited collections.')
+                return redirect('recipes:collection_list')
     else:
         form = CollectionForm()
-    
     return render(request, 'recipes/collection_form.html', {'form': form})
 
 @login_required
@@ -833,35 +838,104 @@ def subscription_management(request):
 @login_required
 @require_POST
 def cancel_subscription(request):
+    """Handle subscription cancellation"""
     try:
         user_profile = request.user.userprofile
-        print(f"Attempting to cancel subscription for user: {request.user.username}")
         
         if not user_profile.stripe_subscription_id:
             return JsonResponse({'error': 'No active subscription found'}, status=400)
         
-        try:
-            # Cancel the subscription in Stripe
-            subscription = stripe.Subscription.modify(
-                user_profile.stripe_subscription_id,
-                cancel_at_period_end=True
-            )
-            
-            # Update the user profile
-            user_profile.subscription_cancelled = True  # Set cancelled flag
-            user_profile.subscription_end_date = datetime.fromtimestamp(subscription.current_period_end)
-            user_profile.save()
-            
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Subscription will end at the current period end',
-                'end_date': subscription.current_period_end
-            })
-            
-        except stripe.error.StripeError as e:
-            print(f"Stripe error: {str(e)}")
-            return JsonResponse({'error': str(e)}, status=400)
+        user_profile.is_premium = False
+        user_profile.subscription_cancelled = True
+        user_profile.save()
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success'})
+        else:
+            messages.success(request, 'Your subscription has been cancelled.')
+            return redirect('recipes:profile')
             
     except Exception as e:
-        print(f"Error cancelling subscription: {str(e)}")
         return JsonResponse({'error': str(e)}, status=400)
+
+@login_required
+def rate_recipe(request, recipe_id):
+    """Handle recipe rating submission"""
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+    if request.method == 'POST':
+        try:
+            value = int(request.POST.get('value', 0))
+            if 1 <= value <= 5:
+                Rating.objects.update_or_create(
+                    recipe=recipe,
+                    user=request.user,
+                    defaults={'value': value}
+                )
+                messages.success(request, 'Rating added successfully!')
+            else:
+                messages.error(request, 'Rating must be between 1 and 5')
+        except ValueError:
+            messages.error(request, 'Invalid rating value')
+    return redirect('recipes:recipe_detail', pk=recipe_id)
+
+@login_required
+def add_comment(request, recipe_id):
+    """Handle recipe comment submission"""
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+    if request.method == 'POST':
+        text = request.POST.get('text', '').strip()
+        if text:
+            Comment.objects.create(
+                recipe=recipe,
+                user=request.user,
+                text=text
+            )
+            messages.success(request, 'Comment added successfully!')
+        else:
+            messages.error(request, 'Comment cannot be empty')
+    return redirect('recipes:recipe_detail', pk=recipe_id)
+
+@login_required
+def create_subscription(request):
+    """Handle subscription creation"""
+    if request.method == 'POST':
+        if not request.user.userprofile.stripe_subscription_id:
+            return JsonResponse({'error': 'No subscription ID found'}, status=400)
+            
+        request.user.userprofile.is_premium = True
+        request.user.userprofile.save()
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success'})
+        else:
+            messages.success(request, 'Successfully subscribed to premium plan!')
+            return redirect('recipes:profile')
+    return redirect('recipes:subscription')
+
+@login_required
+def cancel_subscription(request):
+    """Handle subscription cancellation"""
+    if request.method == 'POST':
+        if not request.user.userprofile.stripe_subscription_id:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'error': 'No active subscription found'}, status=400)
+            messages.error(request, 'No active subscription found')
+            return redirect('recipes:subscription')
+            
+        request.user.userprofile.is_premium = False
+        request.user.userprofile.save()
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success'})
+        messages.success(request, 'Your subscription has been cancelled.')
+        return redirect('recipes:profile')
+    return redirect('recipes:subscription')
+
+@login_required
+def premium_feature(request):
+    if not request.user.userprofile.is_premium:
+        return redirect('recipes:subscription')
+    return render(request, 'recipes/premium_feature.html')
+
+def upgrade_subscription(request):
+    return render(request, 'recipes/upgrade_subscription.html')

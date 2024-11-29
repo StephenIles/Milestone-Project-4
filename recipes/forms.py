@@ -35,8 +35,8 @@ class RecipeForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # If editing existing recipe, populate tags field
-        if self.instance.pk:
+        # If editing existing recipe and it has tags attribute, populate tags field
+        if self.instance.pk and hasattr(self.instance, 'tags'):
             self.initial['tags'] = ', '.join(tag.name for tag in self.instance.tags.all())
 
     def clean_ingredients(self):
@@ -71,6 +71,18 @@ class RecipeForm(forms.ModelForm):
             tags.append(tag)
         
         return tags
+
+    def clean_cooking_time(self):
+        cooking_time = self.cleaned_data.get('cooking_time')
+        if cooking_time is not None and cooking_time <= 0:
+            raise forms.ValidationError("Cooking time must be greater than 0")
+        return cooking_time
+
+    def clean_servings(self):
+        servings = self.cleaned_data.get('servings')
+        if servings is not None and servings <= 0:
+            raise forms.ValidationError("Number of servings must be greater than 0")
+        return servings
 
     def save(self, commit=True):
         recipe = super().save(commit=False)

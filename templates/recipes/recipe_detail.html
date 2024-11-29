@@ -100,16 +100,16 @@
                 </div>
             </div>
 
+            {% if recipe.tags.all %}
             <div class="recipe-tags">
                 <h3>Tags:</h3>
                 {% for tag in recipe.tags.all %}
-                    <a href="{% url 'recipes:tag_detail' tag.slug %}" class="tag-badge">
-                        {{ tag.name }}
-                    </a>
-                {% empty %}
-                    <p>No tags</p>
+                    {% if tag.slug %}
+                        <a href="{% url 'recipes:tag_detail' tag.slug %}" class="tag">{{ tag.name }}</a>
+                    {% endif %}
                 {% endfor %}
             </div>
+            {% endif %}
 
             {% load social_share %}
 

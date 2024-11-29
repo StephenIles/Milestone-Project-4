@@ -1,31 +1,20 @@
 {% extends 'recipes/base.html' %}
 
-{% block title %}{{ tag.name }} Recipes{% endblock %}
+{% block title %}Recipe Tags{% endblock %}
 
 {% block content %}
-<div class="tag-detail">
-    <h1>Recipes tagged with "{{ tag.name }}"</h1>
-    <p class="tag-count">{{ tag.recipe_count }} recipes</p>
+<div class="tags-container">
+    <h1>Recipe Tags</h1>
     
-    <div class="recipe-grid">
-        {% for recipe in recipes %}
-            <div class="recipe-card">
-                <h3>{{ recipe.title }}</h3>
-                {% if recipe.image %}
-                    <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
-                {% endif %}
-                <p>{{ recipe.description|truncatewords:30 }}</p>
-                <div class="recipe-tags">
-                    {% for tag in recipe.tags.all %}
-                        <a href="{% url 'recipes:tag_detail' tag.slug %}" class="tag-badge">
-                            {{ tag.name }}
-                        </a>
-                    {% endfor %}
-                </div>
-                <a href="{% url 'recipes:recipe_detail' recipe.pk %}" class="btn">View Recipe</a>
+    <div class="tag-grid">
+        {% for tag in tags %}
+            <div class="tag-card">
+                <h2>{{ tag.name }}</h2>
+                <p class="recipe-count">{{ tag.count }} recipes</p>
+                <a href="{% url 'recipes:tag_detail' tag.slug %}" class="btn">View Recipes</a>
             </div>
         {% empty %}
-            <p>No recipes with this tag yet.</p>
+            <p>No tags available.</p>
         {% endfor %}
     </div>
 </div>

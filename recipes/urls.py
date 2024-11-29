@@ -14,7 +14,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.register, name='register'),
     path('categories/', views.category_list, name='category_list'),
-    path('category/<slug:slug>/', views.category_detail, name='category_detail'),
+    path('category/<int:pk>/', views.category_detail, name='category_detail'),
     path('recipes/favorite/<int:recipe_id>/toggle/', views.toggle_favorite, name='toggle_favorite'),
     path('favorites/', views.favorite_recipes, name='favorite_list'),
     path('tags/', views.tag_list, name='tag_list'),
@@ -44,4 +44,10 @@ urlpatterns = [
     path('check-premium/', views.check_premium_status, name='check_premium_status'),
     path('subscription/management/', views.subscription_management, name='subscription_management'),
     path('subscription/cancel/', views.cancel_subscription, name='cancel_subscription'),
-] 
+    path('recipe/<int:recipe_id>/rate/', views.rate_recipe, name='rate_recipe'),
+    path('recipe/<int:recipe_id>/comment/', views.add_comment, name='add_comment'),
+    path('subscription/create/', views.create_subscription, name='create_subscription'),
+    path('subscription/cancel/', views.cancel_subscription, name='cancel_subscription'),
+    path('premium-feature/', views.premium_feature, name='premium_feature'),
+    path('subscription/', views.subscription_page, name='subscription'),
+]
