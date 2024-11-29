@@ -1,13 +1,19 @@
 {% extends 'recipes/base.html' %}
 {% load static %}
 
+{% block title %}Meal Planner - The Cooking Pot{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/meal_planner.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="meal-planner">
     <div class="planner-header">
         <h1>Meal Planner</h1>
         <div class="planner-actions">
             <a href="{% url 'recipes:shopping_list' weekly_plan.id %}" class="btn btn-primary">
-                View Shopping List
+                <i class="fas fa-shopping-cart"></i> View Shopping List
             </a>
         </div>
     </div>
@@ -17,76 +23,78 @@
         <div class="day-card" data-plan-id="{{ plan.id }}">
             <h3>{{ date|date:"l" }}<br>{{ date|date:"M d" }}</h3>
             
-            <div class="meal-slot" data-meal-type="breakfast">
-                <h4>Breakfast</h4>
-                <div class="meal-content" id="breakfast-{{ plan.id }}">
+            <div class="meal-slots">
+                <!-- Breakfast -->
+                <div class="meal-slot" data-meal-type="breakfast">
+                    <h4>Breakfast</h4>
                     {% if plan.breakfast %}
-                        <div class="selected-recipe">
-                            <span>{{ plan.breakfast.title }}</span>
-                            <button onclick="removeMeal({{ plan.id }}, 'breakfast')" class="btn-remove">×</button>
+                        <div class="meal-recipe">
+                            <h5>{{ plan.breakfast.title }}</h5>
+                            <p>{{ plan.breakfast.cooking_time }} mins</p>
+                            <button class="remove-recipe-btn" onclick="removeMeal({{ plan.id }}, 'breakfast')">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                     {% else %}
-                        <button onclick="showRecipeModal({{ plan.id }}, 'breakfast')" class="btn-add">
-                            + Add Breakfast
+                        <button class="add-recipe-btn" data-meal-type="breakfast" data-date="{{ date|date:'Y-m-d' }}">
+                            <i class="fas fa-plus"></i> Add Breakfast
                         </button>
                     {% endif %}
                 </div>
-            </div>
 
-            <div class="meal-slot" data-meal-type="lunch">
-                <h4>Lunch</h4>
-                <div class="meal-content" id="lunch-{{ plan.id }}">
+                <!-- Lunch -->
+                <div class="meal-slot" data-meal-type="lunch">
+                    <h4>Lunch</h4>
                     {% if plan.lunch %}
-                        <div class="selected-recipe">
-                            <span>{{ plan.lunch.title }}</span>
-                            <button onclick="removeMeal({{ plan.id }}, 'lunch')" class="btn-remove">×</button>
+                        <div class="meal-recipe">
+                            <h5>{{ plan.lunch.title }}</h5>
+                            <p>{{ plan.lunch.cooking_time }} mins</p>
+                            <button class="remove-recipe-btn" onclick="removeMeal({{ plan.id }}, 'lunch')">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                     {% else %}
-                        <button onclick="showRecipeModal({{ plan.id }}, 'lunch')" class="btn-add">
-                            + Add Lunch
+                        <button class="add-recipe-btn" data-meal-type="lunch" data-date="{{ date|date:'Y-m-d' }}">
+                            <i class="fas fa-plus"></i> Add Lunch
                         </button>
                     {% endif %}
                 </div>
-            </div>
 
-            <div class="meal-slot" data-meal-type="dinner">
-                <h4>Dinner</h4>
-                <div class="meal-content" id="dinner-{{ plan.id }}">
+                <!-- Dinner -->
+                <div class="meal-slot" data-meal-type="dinner">
+                    <h4>Dinner</h4>
                     {% if plan.dinner %}
-                        <div class="selected-recipe">
-                            <span>{{ plan.dinner.title }}</span>
-                            <button onclick="removeMeal({{ plan.id }}, 'dinner')" class="btn-remove">×</button>
+                        <div class="meal-recipe">
+                            <h5>{{ plan.dinner.title }}</h5>
+                            <p>{{ plan.dinner.cooking_time }} mins</p>
+                            <button class="remove-recipe-btn" onclick="removeMeal({{ plan.id }}, 'dinner')">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                     {% else %}
-                        <button onclick="showRecipeModal({{ plan.id }}, 'dinner')" class="btn-add">
-                            + Add Dinner
+                        <button class="add-recipe-btn" data-meal-type="dinner" data-date="{{ date|date:'Y-m-d' }}">
+                            <i class="fas fa-plus"></i> Add Dinner
                         </button>
                     {% endif %}
                 </div>
-            </div>
-
-            <div class="notes">
-                <textarea placeholder="Notes for {{ date|date:'l' }}" 
-                          onchange="updateNotes({{ plan.id }}, this.value)">{{ plan.notes }}</textarea>
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
 
-<!-- Recipe Selection Modal -->
-<div id="recipe-modal" class="modal">
+<!-- Recipe Search Modal -->
+<div class="recipe-modal" id="recipeModal">
     <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Select Recipe</h2>
-        <div class="recipe-list">
-            {% for recipe in recipes %}
-            <div class="recipe-item">
-                <button onclick="selectRecipe(currentPlanId, currentMealType, {{ recipe.id }})">
-                    {{ recipe.title }}
-                </button>
-            </div>
-            {% endfor %}
+        <div class="modal-header">
+            <h2>Select Recipe</h2>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="recipe-search">
+            <input type="text" placeholder="Search recipes..." id="recipeSearch">
+        </div>
+        <div class="recipe-list" id="recipeList">
+            <!-- Recipe items will be populated dynamically -->
         </div>
     </div>
 </div>
@@ -94,10 +102,9 @@
 {% csrf_token %}
 {% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/meal_planner.css' %}">
-{% endblock %}
-
 {% block extra_js %}
+<script>
+    console.log('Debug: Loading meal planner script');
+</script>
 <script src="{% static 'js/meal_planner.js' %}"></script>
 {% endblock %}

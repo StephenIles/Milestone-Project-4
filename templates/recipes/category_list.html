@@ -1,6 +1,11 @@
 {% extends 'recipes/base.html' %}
+{% load static %}
 
-{% block title %}Recipe Categories{% endblock %}
+{% block title %}Categories - The Cooking Pot{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/categories.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="categories-container">
@@ -9,10 +14,13 @@
     <div class="category-grid">
         {% for category in categories %}
             <div class="category-card">
-                <h2>{{ category.name }}</h2>
-                <p>{{ category.description }}</p>
-                <p class="recipe-count">{{ category.recipe_count }} recipes</p>
-                <a href="{% url 'recipes:category_detail' category.pk %}" class="btn">View Recipes</a>
+                <a href="{% url 'recipes:category_detail' category.pk %}">
+                    <h2>{{ category.name }}</h2>
+                    <p class="recipe-count">{{ category.recipes.count }} recipes</p>
+                    {% if category.description %}
+                        <p class="description">{{ category.description }}</p>
+                    {% endif %}
+                </a>
             </div>
         {% empty %}
             <p>No categories available.</p>

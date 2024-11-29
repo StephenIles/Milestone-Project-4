@@ -1,0 +1,154 @@
+/* Register Page Container */
+.register-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.register-container h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 2rem;
+    font-size: 2rem;
+}
+
+/* Form Styling */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #555;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e1e1e1;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.2);
+}
+
+/* Help Text */
+.form-text {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+/* Error Messages */
+.alert {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+    font-size: 0.9rem;
+}
+
+.alert-danger {
+    background-color: #ffebee;
+    border: 1px solid #ffcdd2;
+    color: #c62828;
+}
+
+.alert-success {
+    background-color: #e8f5e9;
+    border: 1px solid #c8e6c9;
+    color: #2e7d32;
+}
+
+/* Submit Button */
+.btn-primary {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #43A047;
+}
+
+.btn-primary:active {
+    transform: translateY(1px);
+}
+
+/* Login Link */
+.register-container p {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #666;
+}
+
+.register-container a {
+    color: #4CAF50;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.register-container a:hover {
+    color: #43A047;
+    text-decoration: underline;
+}
+
+/* Messages Section */
+.messages {
+    margin-bottom: 1.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .register-container {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+}
+
+/* Password Strength Indicator */
+.password-strength {
+    height: 5px;
+    margin-top: 5px;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.strength-weak {
+    background-color: #ff5252;
+    width: 33%;
+}
+
+.strength-medium {
+    background-color: #ffd740;
+    width: 66%;
+}
+
+.strength-strong {
+    background-color: #4caf50;
+    width: 100%;
+}
+
+/* Required Field Indicator */
+.required-field::after {
+    content: '*';
+    color: #f44336;
+    margin-left: 4px;
+}

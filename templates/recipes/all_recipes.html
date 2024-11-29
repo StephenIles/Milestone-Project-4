@@ -1,20 +1,26 @@
 {% extends 'recipes/base.html' %}
 {% load static %}
 
-{% block title %}The Cooking Pot{% endblock %}
+{% block title %}All Recipes - The Cooking Pot{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/home.css' %}">
 {% endblock %}
 
 {% block content %}
-    <h1>Welcome to The Cooking Pot</h1>
-    
     <section class="recipes-container">
-        <h2>Featured Recipes</h2>
-        {% if latest_recipes %}
+        <h1>All Recipes</h1>
+        
+        <div class="quick-search">
+            <form action="{% url 'recipes:recipe_search' %}" method="get">
+                <input type="text" name="q" placeholder="Search recipes..." class="search-input">
+                <button type="submit" class="search-button">Search</button>
+            </form>
+        </div>
+
+        {% if recipes %}
             <div class="recipe-grid">
-                {% for recipe in latest_recipes|slice:":6" %}
+                {% for recipe in recipes %}
                     <div class="recipe-card">
                         <a href="{% url 'recipes:recipe_detail' recipe.pk %}" class="recipe-link">
                             {% if recipe.image %}
@@ -33,9 +39,6 @@
                         </a>
                     </div>
                 {% endfor %}
-            </div>
-            <div class="view-all-button">
-                <a href="{% url 'recipes:all_recipes' %}" class="btn">View All Recipes</a>
             </div>
         {% else %}
             <p>No recipes available yet.</p>

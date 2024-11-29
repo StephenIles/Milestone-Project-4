@@ -1,109 +1,136 @@
-let currentPlanId = null;
-let currentMealType = null;
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('recipeModal');
+    const modalClose = document.querySelector('.modal-close');
+    const recipeSearch = document.getElementById('recipeSearch');
+    const recipeList = document.getElementById('recipeList');
+    let currentButton = null;
 
-function showRecipeModal(planId, mealType) {
-    console.log('Opening modal for plan:', planId, 'meal type:', mealType);
-    currentPlanId = planId;
-    currentMealType = mealType;
-    const modal = document.getElementById('recipe-modal');
-    modal.style.display = 'block';
-}
-
-function selectRecipe(planId, mealType, recipeId) {
-    console.log('Selecting recipe:', recipeId, 'for plan:', planId, 'meal type:', mealType);
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
-    fetch(`/meal-planner/update/${planId}/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': csrftoken,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            meal_type: mealType,
-            recipe_id: recipeId
-        })
-    })
-    .then(response => {
-        console.log('Response status:', response.status);
-        return response.json();
-    })
-    .then(data => {
-        console.log('Response data:', data);
-        if (data.status === 'success') {
-            window.location.reload();
-        } else {
-            alert(data.message || 'Failed to update meal plan');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to update meal plan');
+    // Add click handlers to all add recipe buttons
+    document.querySelectorAll('.add-recipe-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            currentButton = this;
+            modal.style.display = 'block';
+            loadRecipes('');
+            recipeSearch.focus();
+        });
     });
 
-    document.getElementById('recipe-modal').style.display = 'none';
-}
+    // Close modal when clicking X
+    modalClose.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
 
-function removeMeal(planId, mealType) {
-    if (confirm('Are you sure you want to remove this meal?')) {
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        
-        fetch(`/meal-planner/update/${planId}/`, {
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // Search functionality
+    let searchTimeout;
+    recipeSearch.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            loadRecipes(this.value);
+        }, 300);
+    });
+
+    function loadRecipes(searchQuery) {
+        fetch(`/api/recipes/search/?q=${encodeURIComponent(searchQuery)}`)
+            .then(response => response.json())
+            .then(data => {
+                recipeList.innerHTML = '';
+                data.forEach(recipe => {
+                    const recipeItem = document.createElement('div');
+                    recipeItem.className = 'recipe-item';
+                    recipeItem.innerHTML = `
+                        <h4>${recipe.title}</h4>
+                        <p>${recipe.cooking_time} mins</p>
+                    `;
+                    recipeItem.addEventListener('click', () => {
+                        addRecipeToMealPlan(recipe.id);
+                    });
+                    recipeList.appendChild(recipeItem);
+                });
+            });
+    }
+
+    function addRecipeToMealPlan(recipeId) {
+        const planId = currentButton.closest('.day-card').dataset.planId;
+        const mealType = currentButton.dataset.mealType;
+
+        fetch('/api/meal-planner/add-meal/', {
             method: 'POST',
             headers: {
-                'X-CSRFToken': csrftoken,
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
             },
             body: JSON.stringify({
+                recipe_id: recipeId,
                 meal_type: mealType,
-                recipe_id: null
+                plan_id: planId
             })
         })
         .then(response => response.json())
         .then(data => {
-            if (data.status === 'success') {
-                location.reload();  // Refresh to show updated meal plan
-            } else {
-                alert(data.message || 'Failed to remove meal');
+            if (data.success) {
+                const mealSlot = currentButton.closest('.meal-slot');
+                mealSlot.innerHTML = `
+                    <h4>${mealType.charAt(0).toUpperCase() + mealType.slice(1)}</h4>
+                    <div class="meal-recipe">
+                        <h5>${data.recipe.title}</h5>
+                        <p>${data.recipe.cooking_time} mins</p>
+                        <button class="remove-recipe-btn" onclick="removeMeal(${planId}, '${mealType}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                modal.style.display = 'none';
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to remove meal');
         });
     }
-}
+});
 
-function updateNotes(planId, notes) {
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
-    fetch(`/meal-planner/update/${planId}/`, {
+// Global removeMeal function
+window.removeMeal = function(planId, mealType) {
+    if (!confirm('Are you sure you want to remove this meal?')) {
+        return;
+    }
+
+    fetch('/api/meal-planner/remove-meal/', {
         method: 'POST',
         headers: {
-            'X-CSRFToken': csrftoken,
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
         },
         body: JSON.stringify({
-            notes: notes
+            plan_id: planId,
+            meal_type: mealType
         })
     })
-    .catch(error => console.error('Error updating notes:', error));
-}
-
-// Close modal when clicking outside
-window.onclick = function(event) {
-    const modal = document.getElementById('recipe-modal');
-    if (event.target == modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// Close modal when clicking X
-document.querySelector('.close').onclick = function() {
-    document.getElementById('recipe-modal').style.display = 'none';
-}
-
-// Add this to check if JavaScript is loading
-console.log('Meal planner JavaScript loaded');
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const mealSlot = document.querySelector(`[data-plan-id="${planId}"] .meal-slot[data-meal-type="${mealType}"]`);
+            mealSlot.innerHTML = `
+                <h4>${mealType.charAt(0).toUpperCase() + mealType.slice(1)}</h4>
+                <button class="add-recipe-btn" data-meal-type="${mealType}" data-date="${data.date}">
+                    <i class="fas fa-plus"></i> Add ${mealType.charAt(0).toUpperCase() + mealType.slice(1)}
+                </button>
+            `;
+            
+            // Reinitialize click handler for the new button
+            const newButton = mealSlot.querySelector('.add-recipe-btn');
+            if (newButton) {
+                newButton.addEventListener('click', function() {
+                    const modal = document.getElementById('recipeModal');
+                    currentButton = this;
+                    modal.style.display = 'block';
+                    loadRecipes('');
+                    document.getElementById('recipeSearch').focus();
+                });
+            }
+        }
+    });
+}; 

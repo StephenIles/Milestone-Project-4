@@ -1,38 +1,44 @@
 {% extends 'recipes/base.html' %}
+{% load static %}
+
+{% block title %}Shopping List - The Cooking Pot{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/shopping_list.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="shopping-list">
     <div class="list-header">
-        <h1>Shopping List for {{ weekly_plan.start_date|date:"M d" }} - {{ weekly_plan.end_date|date:"M d, Y" }}</h1>
-        <div class="list-actions">
-            <a href="{% url 'recipes:meal_planner' %}" class="btn btn-secondary">Back to Meal Planner</a>
-            <a href="{% url 'recipes:download_shopping_list' weekly_plan.id %}" class="btn btn-primary">Download PDF</a>
-        </div>
+        <h1>Shopping List</h1>
+        <p>For week of {{ weekly_plan.start_date|date:"M d, Y" }}</p>
     </div>
 
     <div class="ingredients-list">
-        {% if shopping_list %}
-            <table class="shopping-table">
-                <thead>
-                    <tr>
-                        <th>Ingredient</th>
-                        <th>Quantity</th>
-                        <th>Unit</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ingredient, details in shopping_list.items %}
-                    <tr>
-                        <td>{{ ingredient }}</td>
-                        <td>{{ details.quantity }}</td>
-                        <td>{{ details.unit }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        {% if ingredients %}
+            <ul>
+                {% for ingredient, details in ingredients.items %}
+                    <li>
+                        <span class="ingredient-name">{{ ingredient }}</span>
+                        <span class="ingredient-amount">
+                            {{ details.quantity|floatformat:"-2" }} {{ details.unit }}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
         {% else %}
-            <p class="no-items">No ingredients in your shopping list yet.</p>
+            <p>No ingredients found for this meal plan.</p>
         {% endif %}
+    </div>
+
+    <div class="list-actions">
+        <a href="{% url 'recipes:meal_planner' %}" class="btn btn-secondary">
+            Back to Meal Planner
+        </a>
+        <!-- Add print functionality if needed -->
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Print List
+        </button>
     </div>
 </div>
 {% endblock %}

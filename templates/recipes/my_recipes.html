@@ -1,0 +1,42 @@
+{% extends 'recipes/base.html' %}
+{% load static %}
+
+{% block title %}My Recipes{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/my_recipes.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="recipe-list">
+    <h1>My Recipes</h1>
+    
+    <div class="recipe-grid">
+        {% if recipes %}
+            {% for recipe in recipes %}
+                <div class="recipe-card">
+                    {% if recipe.image %}
+                        <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+                    {% else %}
+                        <img src="{% static 'images/default-recipe.jpg' %}" alt="Default recipe image">
+                    {% endif %}
+                    <div class="recipe-info">
+                        <h3>{{ recipe.title }}</h3>
+                        <p>{{ recipe.description|truncatewords:20 }}</p>
+                        <div class="recipe-meta">
+                            <span><i class="fas fa-clock"></i> {{ recipe.cooking_time }} mins</span>
+                            <span><i class="fas fa-user"></i> {{ recipe.servings }} servings</span>
+                        </div>
+                        <a href="{% url 'recipes:recipe_detail' recipe.id %}" class="btn">View Recipe</a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-recipes">
+                <p>You haven't created any recipes yet.</p>
+                <a href="{% url 'recipes:recipe_create' %}" class="btn-primary">Create Your First Recipe</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

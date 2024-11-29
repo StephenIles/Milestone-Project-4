@@ -1,0 +1,59 @@
+{% extends 'recipes/base.html' %}
+{% load static %}
+
+{% block title %}My Favorites - The Cooking Pot{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/favorites.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="favorites-container">
+    <h1>My Favorite Recipes</h1>
+    {% csrf_token %}
+    
+    {% if favorites %}
+    <div class="favorites-grid">
+        {% for favorite in favorites %}
+        <div class="favorite-card" data-recipe-id="{{ favorite.recipe.id }}">
+            <div class="favorite-image">
+                {% if favorite.recipe.image %}
+                    <img src="{{ favorite.recipe.image.url }}" alt="{{ favorite.recipe.title }}">
+                {% else %}
+                    <img src="{% static 'images/default-recipe.jpg' %}" alt="Default recipe image">
+                {% endif %}
+            </div>
+            <div class="favorite-content">
+                <h3>{{ favorite.recipe.title }}</h3>
+                <p class="recipe-meta">
+                    <span><i class="far fa-clock"></i> {{ favorite.recipe.cooking_time }} mins</span>
+                    <span><i class="fas fa-user"></i> {{ favorite.recipe.author.username }}</span>
+                </p>
+                <div class="favorite-actions">
+                    <a href="{% url 'recipes:recipe_detail' favorite.recipe.id %}" class="btn btn-view">View Recipe</a>
+                    <button 
+                        class="btn btn-remove-favorite" 
+                        data-recipe-id="{{ favorite.recipe.id }}"
+                        data-is-favorite="true"
+                    >
+                        <i class="fas fa-heart"></i> Remove
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-favorites">
+        <p>You haven't added any favorites yet.</p>
+        <a href="{% url 'recipes:home' %}" class="btn btn-primary">
+            <i class="fas fa-search"></i> Browse Recipes
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/favorites.js' %}"></script>
+{% endblock %}

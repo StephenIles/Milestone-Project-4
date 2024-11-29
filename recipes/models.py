@@ -110,6 +110,11 @@ class Recipe(models.Model):
         blank=True,
         related_name='recipes'
     )
+    favorites = models.ManyToManyField(
+        User,
+        through='Favorite',
+        related_name='favorite_recipes'
+    )
 
     def clean(self):
         super().clean()
@@ -140,12 +145,15 @@ class Recipe(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    def get_ingredients_list(self):
+    def get_formatted_ingredients(self):
         """Returns a formatted list of ingredients"""
-        return [
-            f"{details['quantity']} {details['unit']} {name}"
-            for name, details in self.ingredients.items()
-        ]
+        formatted_ingredients = []
+        for ingredient, details in self.ingredients.items():
+            quantity = details.get('quantity', '')
+            unit = details.get('unit', '')
+            formatted = f"{quantity} {unit} {ingredient}".strip()
+            formatted_ingredients.append(formatted)
+        return formatted_ingredients
     
     @property
     def average_rating(self):
@@ -178,13 +186,16 @@ class Comment(models.Model):
         return f"Comment by {self.user.username} on {self.recipe.title}"
 
 class Favorite(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='favorited_by')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(
+        Recipe, 
+        on_delete=models.CASCADE,
+        related_name='recipe_favorites'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ['user', 'recipe']  # Prevent duplicate favorites
-        ordering = ['-created_at']
+        unique_together = ('user', 'recipe')
 
     def __str__(self):
         return f"{self.user.username} - {self.recipe.title}"
@@ -275,51 +286,64 @@ class MealPlan(models.Model):
         return shopping_list
 
 class WeeklyMealPlan(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='weekly_meal_plans')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     start_date = models.DateField()
-    end_date = models.DateField()
-    daily_plans = models.ManyToManyField(MealPlan, related_name='weekly_plan')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return f"{self.user.username}'s meal plan - {self.start_date}"
+
+class DailyMealPlan(models.Model):
+    MEAL_TYPES = [
+        ('breakfast', 'Breakfast'),
+        ('lunch', 'Lunch'),
+        ('dinner', 'Dinner')
+    ]
+
+    weekly_plan = models.ForeignKey(WeeklyMealPlan, related_name='daily_plans', on_delete=models.CASCADE)
+    date = models.DateField()
+    breakfast = models.ForeignKey('Recipe', related_name='breakfast_meals', on_delete=models.SET_NULL, null=True, blank=True)
+    lunch = models.ForeignKey('Recipe', related_name='lunch_meals', on_delete=models.SET_NULL, null=True, blank=True)
+    dinner = models.ForeignKey('Recipe', related_name='dinner_meals', on_delete=models.SET_NULL, null=True, blank=True)
+
     class Meta:
-        ordering = ['-start_date']
+        ordering = ['date']
+        unique_together = ['weekly_plan', 'date']
 
     def __str__(self):
-        return f"{self.user.username}'s meal plan for week of {self.start_date}"
+        return f"Meal plan for {self.date}"
 
-    def get_weekly_shopping_list(self):
-        """Combine shopping lists from all daily plans"""
-        weekly_list = {}
-        
-        for plan in self.daily_plans.all():
-            daily_list = plan.get_shopping_list()
-            for ingredient, details in daily_list.items():
-                if ingredient in weekly_list:
-                    current_qty = Decimal(str(weekly_list[ingredient]['quantity']))
-                    add_qty = Decimal(str(details['quantity']))
-                    if weekly_list[ingredient]['unit'] == details['unit']:
-                        weekly_list[ingredient]['quantity'] = current_qty + add_qty
-                else:
-                    weekly_list[ingredient] = details.copy()
-        
-        return weekly_list
+    def get_meals(self):
+        """Return all non-null meals for this day"""
+        meals = []
+        if self.breakfast:
+            meals.append(self.breakfast)
+        if self.lunch:
+            meals.append(self.lunch)
+        if self.dinner:
+            meals.append(self.dinner)
+        return meals
 
 class Subscription(models.Model):
     PLAN_CHOICES = [
-        ('monthly', 'Monthly - $9.99'),
-        ('yearly', 'Yearly - $99.99'),
+        ('free', 'Free'),
+        ('monthly', 'Monthly Premium'),
+        ('yearly', 'Yearly Premium'),
     ]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    stripe_customer_id = models.CharField(max_length=50, blank=True, null=True)
-    stripe_subscription_id = models.CharField(max_length=50, blank=True, null=True)
-    plan = models.CharField(max_length=20, choices=PLAN_CHOICES)
-    active = models.BooleanField(default=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='subscription')
+    plan = models.CharField(max_length=10, choices=PLAN_CHOICES, default='free')
+    stripe_subscription_id = models.CharField(max_length=100, blank=True, null=True)
+    valid_until = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.user.username}'s {self.plan} subscription"
+
+    class Meta:
+        db_table = 'user_subscription'
 
 

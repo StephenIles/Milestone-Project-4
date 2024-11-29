@@ -1,0 +1,76 @@
+.categories-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.category-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.category-card a {
+    text-decoration: none;
+    color: inherit;
+    padding: 20px;
+    display: block;
+}
+
+.category-card h2 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 1.5em;
+}
+
+.recipe-count {
+    color: #666;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+
+.description {
+    color: #555;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+/* Category Detail Page */
+.category-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 20px;
+}
+
+.category-description {
+    max-width: 800px;
+    margin: 20px auto;
+    color: #666;
+    line-height: 1.6;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .category-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .category-grid {
+        grid-template-columns: 1fr;
+    }
+} 

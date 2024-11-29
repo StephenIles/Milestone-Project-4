@@ -1,230 +1,114 @@
 {% extends 'recipes/base.html' %}
+{% load static %}
 
-{% block title %}{{ recipe.title }}{% endblock %}
+{% block title %}{{ recipe.title }} - The Cooking Pot{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/recipe_detail.css' %}">
+{% endblock %}
 
 {% block content %}
+<div class="recipe-detail">
     {% csrf_token %}
-    <div class="recipe-detail">
-        <h2>{{ recipe.title }}</h2>
-        
-        <!-- Recipe Info -->
-        <div class="recipe-info">
-            {% if recipe.image %}
+    
+    <p style="display:none">Debug: Recipe ID = {{ recipe.id }}</p>
+    
+    <div class="recipe-header">
+        {% if recipe.image %}
+            <div class="recipe-image">
                 <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
-            {% endif %}
+            </div>
+        {% else %}
+            <div class="recipe-image default-image">
+                <img src="{% static 'images/default-recipe.jpg' %}" alt="Default Recipe Image">
+            </div>
+        {% endif %}
+        
+        <div class="recipe-header-content">
+            <h1>{{ recipe.title }}</h1>
             
             <div class="recipe-meta">
-                <p>By {{ recipe.author.username }}</p>
-                <p>Cooking Time: {{ recipe.cooking_time }} minutes</p>
-                <p>Servings: {{ recipe.servings }}</p>
-                
-                <!-- Average Rating -->
-                <div class="rating-summary">
-                    {% with avg_rating=recipe.ratings.all|length %}
-                        {% if avg_rating > 0 %}
-                            <p>Average Rating: {{ recipe.ratings.all|stringformat:".1f" }} ({{ avg_rating }} ratings)</p>
+                <span class="meta-item"><i class="fas fa-user"></i> By {{ recipe.author.username }}</span>
+                <span class="meta-item"><i class="fas fa-clock"></i> {{ recipe.cooking_time }} mins</span>
+                <span class="meta-item"><i class="fas fa-users"></i> {{ recipe.servings }} servings</span>
+                <span class="meta-item"><i class="fas fa-folder"></i> {{ recipe.category.name }}</span>
+            </div>
+
+            {% if user.is_authenticated %}
+                <div class="recipe-actions">
+                    <button 
+                        class="btn btn-favorite" 
+                        data-recipe-id="{{ recipe.id }}"
+                        data-is-favorite="{{ is_favorite|yesno:'true,false' }}"
+                        type="button"
+                    >
+                        {% if is_favorite %}
+                            <i class="fas fa-heart"></i> Remove from Favorites
                         {% else %}
-                            <p>No ratings yet</p>
+                            <i class="far fa-heart"></i> Add to Favorites
                         {% endif %}
-                    {% endwith %}
-                </div>
-            </div>
-
-            <!-- Favorite Button -->
-            {% if user.is_authenticated %}
-                <button 
-                    class="btn btn-favorite {% if is_favorited %}active{% endif %}" 
-                    data-recipe-id="{{ recipe.id }}"
-                    onclick="toggleFavorite(this)"
-                    type="button">
-                    {% if is_favorited %}
-                        ★ Favorited
-                    {% else %}
-                        ☆ Add to Favorites
-                    {% endif %}
-                </button>
-            {% endif %}
-
-            <!-- Rating Form -->
-            {% if user.is_authenticated %}
-                <div class="rating-form">
-                    <h4>Rate this recipe</h4>
-                    <form method="post">
-                        {% csrf_token %}
-                        {{ rating_form.as_p }}
-                        <button type="submit" name="rating">Submit Rating</button>
-                    </form>
-                </div>
-            {% endif %}
-
-            <!-- Recipe Content -->
-            <div class="recipe-content">
-                <p class="description">{{ recipe.description }}</p>
-                
-                <h3>Ingredients</h3>
-                <ul class="ingredients-list">
-                    {% for ingredient, details in recipe.ingredients.items %}
-                        <li>{{ ingredient }}: {{ details.quantity }} {{ details.unit }}</li>
-                    {% endfor %}
-                </ul>
-
-                <h3>Instructions</h3>
-                <div class="instructions">
-                    {{ recipe.instructions|linebreaks }}
-                </div>
-            </div>
-
-            <!-- Comments Section -->
-            <div class="comments-section">
-                <h3>Comments</h3>
-                
-                {% if user.is_authenticated %}
-                    <form method="post" class="comment-form">
-                        {% csrf_token %}
-                        {{ comment_form.as_p }}
-                        <button type="submit" name="comment">Add Comment</button>
-                    </form>
-                {% endif %}
-
-                <div class="comments-list">
-                    {% for comment in comments %}
-                        <div class="comment">
-                            <p class="comment-meta">
-                                {{ comment.user.username }} - {{ comment.created_at|date:"F j, Y" }}
-                            </p>
-                            <p class="comment-text">{{ comment.text }}</p>
-                        </div>
-                    {% empty %}
-                        <p>No comments yet. Be the first to comment!</p>
-                    {% endfor %}
-                </div>
-            </div>
-
-            {% if recipe.tags.all %}
-            <div class="recipe-tags">
-                <h3>Tags:</h3>
-                {% for tag in recipe.tags.all %}
-                    {% if tag.slug %}
-                        <a href="{% url 'recipes:tag_detail' tag.slug %}" class="tag">{{ tag.name }}</a>
-                    {% endif %}
-                {% endfor %}
-            </div>
-            {% endif %}
-
-            {% load social_share %}
-
-            <div class="share-buttons">
-                <h3>Share this recipe:</h3>
-                
-                {% social_share_url 'facebook' recipe as facebook_url %}
-                <button class="share-button share-facebook" 
-                        onclick="shareRecipe('facebook', '{{ facebook_url }}')">
-                    <i class="fab fa-facebook-f"></i> Facebook
-                </button>
-                
-                {% social_share_url 'twitter' recipe as twitter_url %}
-                <button class="share-button share-twitter" 
-                        onclick="shareRecipe('twitter', '{{ twitter_url }}')">
-                    <i class="fab fa-twitter"></i> Twitter
-                </button>
-                
-                {% social_share_url 'pinterest' recipe as pinterest_url %}
-                <button class="share-button share-pinterest" 
-                        onclick="shareRecipe('pinterest', '{{ pinterest_url }}')">
-                    <i class="fab fa-pinterest-p"></i> Pinterest
-                </button>
-                
-                {% social_share_url 'email' recipe as email_url %}
-                <button class="share-button share-email" 
-                        onclick="shareRecipe('email', '{{ email_url }}')">
-                    <i class="fas fa-envelope"></i> Email
-                </button>
-                
-                <div class="copy-link-container">
-                    <input type="hidden" id="recipe-url" value="{{ request.build_absolute_uri }}">
-                    <button id="copy-link" class="share-button copy-link" onclick="copyLink()">
-                        <i class="fas fa-link"></i> Copy Link
                     </button>
-                </div>
-            </div>
-
-            <!-- Add this where you want the collection button to appear -->
-            {% if user.is_authenticated %}
-                <div class="collection-actions">
-                    <button class="btn btn-add" onclick="showCollectionModal({{ recipe.pk }})">
-                        Add to Collection
-                    </button>
-                </div>
-
-                <!-- Add this modal at the bottom of your template -->
-                <div id="collection-modal" class="modal">
-                    <div class="modal-content">
-                        <span class="close">&times;</span>
-                        <h3>Add to Collection</h3>
-                        <div id="collections-list">
-                            <!-- Collections will be loaded here -->
+                    
+                    {% if user == recipe.author %}
+                        <div class="author-actions">
+                            <a href="{% url 'recipes:recipe_edit' pk=recipe.id %}" class="btn btn-edit">
+                                <i class="fas fa-edit"></i> Edit Recipe
+                            </a>
+                            <button class="btn btn-delete" data-recipe="{{ recipe.id }}">
+                                <i class="fas fa-trash"></i> Delete Recipe
+                            </button>
                         </div>
-                    </div>
+                    {% endif %}
                 </div>
             {% endif %}
         </div>
     </div>
+
+    <div class="recipe-content">
+        <div class="recipe-description">
+            <h2>About this Recipe</h2>
+            <p>{{ recipe.description }}</p>
+        </div>
+
+        <div class="recipe-main-content">
+            <div class="recipe-ingredients">
+                <h2>Ingredients</h2>
+                <div class="ingredients-list">
+                    <ul>
+                        {% for ingredient in recipe.get_formatted_ingredients %}
+                            <li>{{ ingredient }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="recipe-instructions">
+                <h2>Instructions</h2>
+                <div class="instructions-list">
+                    {{ recipe.instructions|linebreaks }}
+                </div>
+            </div>
+        </div>
+
+        {% if recipe.tags.all %}
+            <div class="recipe-tags">
+                <h2>Tags</h2>
+                <div class="tags-container">
+                    {% for tag in recipe.tags.all %}
+                        <span class="tag">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add CSRF token for AJAX requests -->
+
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    // Add this to verify the button is properly set up
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Page loaded');
-        const favoriteButton = document.querySelector('.btn-favorite');
-        if (favoriteButton) {
-            console.log('Favorite button found:', favoriteButton.dataset.recipeId);
-        }
-    });
-
-    function addToCollection(recipeId) {
-        fetch(`/api/collections/user/`)
-            .then(response => response.json())
-            .then(collections => {
-                const modal = document.getElementById('collection-modal');
-                const list = document.getElementById('collections-list');
-                list.innerHTML = collections.map(collection => `
-                    <div class="collection-item">
-                        <button onclick="saveToCollection(${collection.id}, ${recipeId})">
-                            ${collection.name}
-                        </button>
-                    </div>
-                `).join('');
-                modal.style.display = 'block';
-            });
-    }
-
-    function saveToCollection(collectionId, recipeId) {
-        fetch(`/collections/${collectionId}/add/${recipeId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                document.getElementById('collection-modal').style.display = 'none';
-                alert('Recipe added to collection!');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to add recipe to collection');
-        });
-    }
-
-    // Close modal when clicking outside
-    window.onclick = function(event) {
-        const modal = document.getElementById('collection-modal');
-        if (event.target == modal) {
-            modal.style.display = 'none';
-        }
-    }
-</script>
+<script>console.log('Loading favorites.js...');</script>
+<script src="{% static 'js/favorites.js' %}"></script>
+<script>console.log('Favorites.js loaded');</script>
 {% endblock %}

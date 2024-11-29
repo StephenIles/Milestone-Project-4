@@ -1,25 +1,45 @@
 {% extends 'recipes/base.html' %}
+{% load static %}
 
-{% block title %}{{ category.name }} Recipes{% endblock %}
+{% block title %}{{ category.name }} - The Cooking Pot{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/categories.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="category-detail">
-    <h1>{{ category.name }}</h1>
-    <p class="category-description">{{ category.description }}</p>
-    
-    <div class="recipe-grid">
-        {% for recipe in recipes %}
-            <div class="recipe-card">
-                <h3>{{ recipe.title }}</h3>
-                {% if recipe.image %}
-                    <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
-                {% endif %}
-                <p>{{ recipe.description|truncatewords:30 }}</p>
-                <a href="{% url 'recipes:recipe_detail' recipe.pk %}" class="btn">View Recipe</a>
-            </div>
-        {% empty %}
-            <p>No recipes in this category yet.</p>
-        {% endfor %}
+    <div class="category-header">
+        <h1>{{ category.name }}</h1>
+        {% if category.description %}
+            <p class="category-description">{{ category.description }}</p>
+        {% endif %}
+    </div>
+
+    <div class="recipes-container">
+        <div class="recipe-grid">
+            {% for recipe in recipes %}
+                <div class="recipe-card">
+                    <a href="{% url 'recipes:recipe_detail' recipe.pk %}">
+                        {% if recipe.image %}
+                            <div class="recipe-image">
+                                <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+                            </div>
+                        {% endif %}
+                        <div class="recipe-content">
+                            <h3>{{ recipe.title }}</h3>
+                            <p class="description">{{ recipe.description|truncatewords:20 }}</p>
+                            <div class="recipe-meta">
+                                <span><i class="fas fa-clock"></i> {{ recipe.cooking_time }} mins</span>
+                                <span><i class="fas fa-user"></i> {{ recipe.servings }} servings</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% empty %}
+                <p>No recipes in this category yet.</p>
+            {% endfor %}
+        </div>
     </div>
 </div>
 {% endblock %}

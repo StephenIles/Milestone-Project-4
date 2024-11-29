@@ -1,0 +1,72 @@
+{% extends 'recipes/base.html' %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="search-page">
+    <!-- Search Form -->
+    <div class="search-form">
+        <form action="{% url 'recipes:recipe_search' %}" method="get">
+            <div class="search-input-group">
+                <input type="text" name="q" value="{{ query }}" placeholder="Search recipes..." class="search-input">
+                <button type="submit" class="search-button">Search</button>
+            </div>
+            
+            <!-- Filters -->
+            <div class="filters">
+                <div class="category-filter">
+                    <label>Category:</label>
+                    <select name="category">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                            <option value="{{ category.slug }}" 
+                                {% if category.slug == selected_category %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="tags-filter">
+                    <label>Tags:</label>
+                    {% for tag in tags %}
+                        <label class="tag-checkbox">
+                            <input type="checkbox" name="tags" value="{{ tag.slug }}"
+                                {% if tag.slug in selected_tags %}checked{% endif %}>
+                            {{ tag.name }}
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results -->
+    <div class="search-results">
+        <h2>Search Results {% if query %}for "{{ query }}"{% endif %}</h2>
+        
+        {% if recipes %}
+            <div class="recipe-grid">
+                {% for recipe in recipes %}
+                    <div class="recipe-card">
+                        {% if recipe.image %}
+                            <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+                        {% endif %}
+                        <div class="recipe-info">
+                            <h3>{{ recipe.title }}</h3>
+                            <p>{{ recipe.description|truncatewords:20 }}</p>
+                            <div class="recipe-meta">
+                                <span><i class="fas fa-clock"></i> {{ recipe.cooking_time }} mins</span>
+                                <span><i class="fas fa-user"></i> {{ recipe.servings }} servings</span>
+                            </div>
+                            <a href="{% url 'recipes:recipe_detail' recipe.id %}" class="btn">View Recipe</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-results">No recipes found matching your search criteria.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

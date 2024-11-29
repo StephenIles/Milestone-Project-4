@@ -1,34 +1,198 @@
 {% extends 'recipes/base.html' %}
+{% load static %}
 
-{% block title %}My Profile{% endblock %}
+{% block title %}My Profile - The Cooking Pot{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
 
 {% block content %}
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
 <div class="profile-container">
-    <h2>Welcome, {{ user.username }}!</h2>
-    
-    <div class="profile-actions">
-        <a href="{% url 'recipes:recipe_create' %}" class="btn">Create New Recipe</a>
+    <div class="profile-header">
+        <h1>My Profile</h1>
+        <div class="profile-info">
+            <p><strong>Username:</strong> {{ user.username }}</p>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+            <p><strong>Member since:</strong> {{ user.date_joined|date:"F j, Y" }}</p>
+        </div>
     </div>
-    
-    <section class="my-recipes">
-        <h3>My Recipes</h3>
-        {% if recipes %}
-            <div class="recipe-grid">
-                {% for recipe in recipes %}
+
+    <div class="profile-content">
+        <!-- My Recipes Section -->
+        <section class="my-recipes">
+            <h2>My Recipes</h2>
+            {% if recipes %}
+                <div class="recipe-grid">
+                    {% for recipe in recipes %}
                     <div class="recipe-card">
-                        <h4>{{ recipe.title }}</h4>
-                        <p>{{ recipe.description }}</p>
-                        <div class="recipe-card-actions">
-                            <a href="{% url 'recipes:recipe_detail' recipe.pk %}">View</a>
-                            <a href="{% url 'recipes:recipe_edit' recipe.pk %}">Edit</a>
-                            <a href="{% url 'recipes:recipe_delete' recipe.pk %}">Delete</a>
+                        {% if recipe.image %}
+                            <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+                        {% else %}
+                            <img src="{% static 'images/default-recipe.jpg' %}" alt="Default recipe image">
+                        {% endif %}
+                        <div class="recipe-info">
+                            <h3>{{ recipe.title }}</h3>
+                            <p>{{ recipe.description|truncatewords:20 }}</p>
+                            <div class="recipe-meta">
+                                <span><i class="far fa-clock"></i> {{ recipe.cooking_time }} mins</span>
+                                <span><i class="fas fa-utensils"></i> {{ recipe.difficulty }}</span>
+                            </div>
+                            <a href="{% url 'recipes:recipe_detail' recipe.id %}" class="btn btn-view">View Recipe</a>
                         </div>
                     </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="no-items">You haven't created any recipes yet.</p>
+            {% endif %}
+        </section>
+
+        <!-- My Favorites Section -->
+        <section class="my-favorites">
+            <h2>My Favorite Recipes</h2>
+            {% if favorites %}
+                <div class="recipe-grid">
+                    {% for favorite in favorites %}
+                    <div class="recipe-card">
+                        {% if favorite.recipe.image %}
+                            <img src="{{ favorite.recipe.image.url }}" alt="{{ favorite.recipe.title }}">
+                        {% else %}
+                            <img src="{% static 'images/default-recipe.jpg' %}" alt="Default recipe image">
+                        {% endif %}
+                        <div class="recipe-info">
+                            <h3>{{ favorite.recipe.title }}</h3>
+                            <p>{{ favorite.recipe.description|truncatewords:20 }}</p>
+                            <div class="recipe-meta">
+                                <span><i class="far fa-clock"></i> {{ favorite.recipe.cooking_time }} mins</span>
+                                <span><i class="fas fa-user"></i> {{ favorite.recipe.author.username }}</span>
+                            </div>
+                            <a href="{% url 'recipes:recipe_detail' favorite.recipe.id %}" class="btn btn-view">View Recipe</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="no-items">You haven't favorited any recipes yet.</p>
+            {% endif %}
+        </section>
+
+        <!-- Add Subscription Section -->
+        <section class="subscription-section">
+            <h2>Subscription Management</h2>
+            <div class="subscription-info">
+                <div class="subscription-status">
+                    <h3>Current Subscription</h3>
+                    <div class="current-plan {% if not subscription.is_active %}cancelled{% endif %}">
+                        <p><strong>Plan:</strong> {{ subscription.get_plan_display }}</p>
+                        {% if subscription.valid_until %}
+                            <p><strong>Valid until:</strong> {{ subscription.valid_until|date:"F j, Y" }}</p>
+                        {% endif %}
+                        
+                        <p><strong>Status:</strong> 
+                            <span class="status-badge {% if subscription.is_active %}active{% else %}cancelled{% endif %}">
+                                {% if subscription.is_active %}Active{% else %}Cancelled{% endif %}
+                            </span>
+                        </p>
+
+                        {% if subscription.is_active and subscription.plan != 'free' %}
+                            <form action="{% url 'recipes:cancel_subscription' %}" method="post" class="cancel-subscription-form">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-danger" onclick="confirmCancel(this)">
+                                    Cancel Subscription
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Always show subscription options -->
+                <div class="subscription-options">
+                    <div class="plans-grid">
+                        <!-- Monthly Plan -->
+                        <div class="plan-card">
+                            <h4>Monthly Plan</h4>
+                            <p class="price">$9.99/month</p>
+                            <ul class="features">
+                                <li>Meal Planning</li>
+                                <li>Shopping List Generation</li>
+                                <li>Recipe Collections</li>
+                            </ul>
+                            <button class="btn btn-subscribe subscribe-btn" 
+                                    data-plan-id="{{ monthly_price_id }}"
+                                    {% if subscription.plan == 'monthly' %}disabled{% endif %}>
+                                {% if subscription.plan == 'monthly' %}
+                                    Current Plan
+                                {% else %}
+                                    Subscribe Monthly
+                                {% endif %}
+                            </button>
+                        </div>
+
+                        <!-- Annual Plan -->
+                        <div class="plan-card">
+                            <h4>Annual Plan</h4>
+                            <p class="price">$99.99/year</p>
+                            <ul class="features">
+                                <li>All Monthly Features</li>
+                                <li>2 Months Free</li>
+                                <li>Early Access to New Features</li>
+                            </ul>
+                            <button class="btn btn-subscribe subscribe-btn" 
+                                    data-plan-id="{{ yearly_price_id }}"
+                                    {% if subscription.plan == 'yearly' %}disabled{% endif %}>
+                                {% if subscription.plan == 'yearly' %}
+                                    Current Plan
+                                {% else %}
+                                    Subscribe Yearly
+                                {% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add this section after the subscription status -->
+                <div class="premium-features">
+                    {% if subscription.is_active and subscription.plan != 'free' %}
+                        <div class="feature-card">
+                            <h3>Premium Features</h3>
+                            <ul class="feature-list">
+                                <li>
+                                    <a href="{% url 'recipes:meal_planner' %}" class="btn btn-primary">
+                                        <i class="fas fa-calendar-alt"></i> Access Meal Planner
+                                    </a>
+                                </li>
+                                <!-- Add other premium features here -->
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
-        {% else %}
-            <p>You haven't created any recipes yet.</p>
-        {% endif %}
-    </section>
+        </section>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Add Stripe.js before your custom script -->
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    const stripePublishableKey = '{{ stripe_publishable_key }}';
+    const cancelSubscriptionUrl = "{% url 'recipes:cancel_subscription' %}";
+    const csrfToken = "{{ csrf_token }}";
+</script>
+<script src="{% static 'js/profile-subscription.js' %}"></script>
+<script>
+function confirmCancel(button) {
+    console.log('Confirm cancel called'); // Debug log
+    if (confirm('Are you sure you want to cancel your subscription? You will continue to have access until the end of your current billing period.')) {
+        console.log('User confirmed cancellation'); // Debug log
+        const form = button.closest('form');
+        console.log('Form action:', form.action); // Debug log
+        form.submit();
+    }
+}
+</script>
 {% endblock %}

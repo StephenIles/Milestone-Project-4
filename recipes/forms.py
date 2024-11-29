@@ -5,39 +5,39 @@ from .models import Recipe, Rating, Comment, Tag, Category, Collection
 from django.template.defaultfilters import slugify
 
 class UserRegistrationForm(UserCreationForm):
-    email = forms.EmailField(required=True)
+    email = forms.EmailField()
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password1', 'password2')
+        fields = ['username', 'email', 'password1', 'password2']
 
 class RecipeForm(forms.ModelForm):
-    tags = forms.CharField(
+    tags = forms.ModelMultipleChoiceField(
+        queryset=Tag.objects.all(),
         required=False,
-        widget=forms.TextInput(attrs={
-            'class': 'tag-input',
-            'placeholder': 'Add tags (comma separated)'
-        })
+        widget=forms.CheckboxSelectMultiple
+    )
+    category = forms.ModelChoiceField(
+        queryset=Category.objects.all(),
+        empty_label="Select a Category",
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
 
     class Meta:
         model = Recipe
-        fields = ['title', 'description', 'ingredients', 'instructions', 
-                 'cooking_time', 'servings', 'image', 'category', 'tags']
+        fields = ['title', 'description', 'cooking_time', 'servings', 'image', 'category', 'instructions']
         widgets = {
-            'ingredients': forms.Textarea(attrs={
-                'placeholder': '{"ingredient": {"quantity": number, "unit": "string"}}',
-                'rows': 4
-            }),
-            'instructions': forms.Textarea(attrs={'rows': 5}),
-            'description': forms.Textarea(attrs={'rows': 3}),
+            'description': forms.Textarea(attrs={'rows': 4}),
+            'instructions': forms.Textarea(attrs={'rows': 6}),
         }
+
+    # Hidden field to store JSON ingredients
+    ingredients_json = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # If editing existing recipe and it has tags attribute, populate tags field
-        if self.instance.pk and hasattr(self.instance, 'tags'):
-            self.initial['tags'] = ', '.join(tag.name for tag in self.instance.tags.all())
+        for field in self.fields:
+            self.fields[field].widget.attrs['class'] = 'form-control'
 
     def clean_ingredients(self):
         ingredients = self.cleaned_data.get('ingredients')
